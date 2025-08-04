@@ -6,26 +6,25 @@
   <title>Your Name – Portfolio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg-dark:#0f0f0f;
-      --text-light:#e6e6e6;
-      --text-muted:#9ca3af;
-    }
+    :root{--bg-dark:#0f0f0f;--text-light:#e6e6e6;--text-muted:#9ca3af;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg-dark);color:var(--text-light);scroll-behavior:smooth;overflow-x:hidden;}
 
-    /* ===== LEFT SHINE EFFECT ===== */
+    /* ===== LEFT SHINE EFFECT (brighter & wider) ===== */
     body::before{
-      content:"";pointer-events:none;position:fixed;top:0;left:0;width:120vw;height:120vh;
-      background:radial-gradient(90% 80% at -10% 15%,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0.05) 35%,rgba(255,255,255,0) 70%);
-      transform:translateX(-10%) translateY(-10%) rotate(8deg);
-      filter:blur(80px);
+      content:"";
+      pointer-events:none;
+      position:fixed;top:0;left:0;
+      width:160vw;height:160vh;
+      background:radial-gradient(120% 95% at -15% 20%, rgba(255,255,255,.35) 0%, rgba(255,255,255,.10) 38%, rgba(255,255,255,0) 72%);
+      transform:translateX(-12%) translateY(-12%) rotate(5deg);
+      filter:blur(90px);
       mix-blend-mode:overlay;
       z-index:0;
     }
 
     /* ===== NAV ===== */
-    .nav{position:absolute;top:1.2rem;right:2.4rem;display:flex;gap:1.4rem;font-size:0.78rem;font-weight:500;}
+    .nav{position:absolute;top:1.2rem;right:2.4rem;display:flex;gap:1.4rem;font-size:.78rem;font-weight:500;letter-spacing:.02em;}
     .nav a{color:var(--text-light);text-decoration:none;transition:opacity .2s;}
     .nav a:hover{opacity:.7;}
 
@@ -33,7 +32,7 @@
     .hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 2rem;}
     .hero h1{font-size:clamp(2.1rem,5vw,3.5rem);font-weight:500;}
     .hero h1 .cursive{font-family:'Playfair Display',serif;font-style:italic;}
-    .roles{margin-top:.7rem;font-size:.8rem;color:var(--text-muted);}
+    .roles{margin-top:.7rem;font-size:.8rem;color:var(--text-muted);max-width:45rem;}
     .btn{margin-top:1.8rem;padding:.7rem 1.8rem;font-size:.82rem;color:var(--text-light);background:transparent;border:1px solid var(--text-light);border-radius:.34rem;text-decoration:none;transition:background .2s,color .2s;}
     .btn:hover{background:var(--text-light);color:var(--bg-dark);}
 
@@ -44,18 +43,12 @@
     .socials a:hover{opacity:.7;}
     .socials svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;}
 
-    @media(max-width:640px){
-      .nav{right:1rem;gap:1rem;font-size:.72rem;}
-      .roles{font-size:.74rem;}
-    }
+    @media(max-width:640px){.nav{right:1rem;gap:1rem;font-size:.72rem;}.roles{font-size:.74rem;}}
   </style>
 </head>
 <body>
   <nav class="nav">
-    <a href="#about">about</a>
-    <a href="#campaigns">campaigns</a>
-    <a href="#reel">reel</a>
-    <a href="#contact">contact</a>
+    <a href="#about">about</a><a href="#campaigns">campaigns</a><a href="#reel">reel</a><a href="#contact">contact</a>
   </nav>
 
   <section class="hero" id="home">
@@ -66,15 +59,7 @@
 
   <footer>
     <div class="socials">
-      <!-- YouTube -->
       <a aria-label="YouTube" href="https://youtube.com/" target="_blank"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg></a>
-      <!-- Discord -->
       <a aria-label="Discord" href="https://discord.com/" target="_blank"><svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/><path d="M8.02 15.331c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44 0 1.35-.955 2.444-2.153 2.444Zm7.96 0c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44 0 1.35-.955 2.444-2.153 2.444Z"/></svg></a>
-      <!-- X -->
       <a aria-label="X" href="https://x.com/" target="_blank"><svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg></a>
-      <!-- LinkedIn -->
-      <a aria-label="LinkedIn" href="https://linkedin.com/" target="_blank"><svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5ZM2 8.56h3.88v12.94H2zm6.14 0h3.7v1.77h.05c.51-.97 1.75-2 3.6-2 3.85 0 4.56 2.54 4.56 5.84V21.5h-3.88v-6.2c0-1.48-.03-3.39-2.07-3.39-2.07 0-2.39 1.62-2.39 3.29v6.3H8.14Z"/></svg></a>
-    </div>
-  </footer>
-</body>
-</html>
+      <a aria-label="LinkedIn" href="https://linkedin.com/" target="_blank"><svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.")]
