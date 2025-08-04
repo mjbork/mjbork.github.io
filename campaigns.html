@@ -6,29 +6,29 @@
 <title>Campaigns — Your Name</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 <style>
-/* shared palette */
+/* dark palette to match home */
 body{background:#0f0f0f;color:#e6e6e6;font-family:'Inter',sans-serif;margin:0}
 main{max-width:680px;margin:15vh auto 0;padding:0 1.5rem;text-align:left}
 
 /* heading */
 h1{
   font-size:1.9rem;
-  font-weight:600;      /* bold */
+  font-weight:600;
   margin-bottom:2rem;
   color:#e6e6e6;
 }
 
 /* list */
 ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1rem}
-li{display:block;font-size:.92rem;line-height:1.4}
+li{font-size:.92rem;line-height:1.4}
 li a{
   color:#e6e6e6;
   text-decoration:none;
   display:inline-block;
-  transition:transform .15s ease, opacity .15s ease;
+  transition:color .15s ease,opacity .15s ease;
 }
-li a::before{content:"– ";color:#9ca3af}         /* leading dash */
-li a:hover{transform:translateY(-2px);opacity:.9}
+li a::before{content:"– ";color:#9ca3af}
+li a:hover{color:#c6c6c6;opacity:.9}   /* subtle grayscale shift */
 
 /* back link */
 .back{margin-top:3rem}
@@ -38,7 +38,7 @@ li a:hover{transform:translateY(-2px);opacity:.9}
 </head>
 <body>
 <main>
-  <h1>campaigns</h1>
+  <h1>campaigns…</h1>
 
   <ul>
     <li><a href="#">Community Informatics Corps, UIUC</a></li>
