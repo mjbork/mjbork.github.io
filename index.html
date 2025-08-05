@@ -10,71 +10,67 @@
 
 <style>
 :root{
-  --body:#121212;      /* page bg   */
-  --bar:#0d0d0d;       /* top strip */
-  --bar-line:#1a1a1a;  /* thin line */
+  --bg:#0f0f0f;        /* single page colour */
   --text:#e6e6e6;
   --muted:#9ca3af;
 }
 
 /* reset + base */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--body);color:var(--text);font-family:Inter,sans-serif;scroll-behavior:smooth}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,sans-serif;scroll-behavior:smooth}
 
-/* ===== TOP BAR ===== */
-.topbar{
-  position:fixed;top:0;left:0;width:100%;height:60px;
-  background:var(--bar);border-bottom:1px solid var(--bar-line);
-  display:flex;justify-content:flex-end;align-items:center;padding-right:2rem;z-index:3;
+/* ===== soft organic glow ===== */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 80% at -15% -15%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 60%);
+  filter:blur(80px);mix-blend-mode:overlay;
 }
-.nav{display:flex;gap:1.4rem;font-size:.78rem;font-weight:500;letter-spacing:.02em}
+
+/* ===== NAV (no bar) ===== */
+.nav{position:absolute;top:1.2rem;right:2.4rem;display:flex;gap:1.4rem;font-size:.78rem;font-weight:500;letter-spacing:.02em;z-index:2}
 .nav a{color:var(--text);text-decoration:none;transition:opacity .2s}
-.nav a:hover{opacity:.7}
+.nav a:hover{opacity:.75}
 
 /* ===== HERO ===== */
-.hero{min-height:calc(100vh - 60px);padding-top:60px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 2rem;position:relative;z-index:1}
 .hero h1{font-size:clamp(2.1rem,5vw,3.5rem);font-weight:500}
 .hero h1 .cursive{font-family:Courgette,cursive;font-style:normal}
 .roles{margin-top:.7rem;font-size:.8rem;color:var(--muted);max-width:45rem}
 .btn{margin-top:1.8rem;padding:.7rem 1.8rem;font-size:.82rem;color:var(--text);border:1px solid var(--text);border-radius:.34rem;background:transparent;text-decoration:none;transition:.2s}
-.btn:hover{background:var(--text);color:var(--body)}
+.btn:hover{background:var(--text);color:var(--bg)}
 
 /* ===== FOOTER ===== */
-footer{position:absolute;bottom:1.2rem;width:100%;display:flex;justify-content:center}
+footer{position:absolute;bottom:1.2rem;width:100%;display:flex;justify-content:center;z-index:1}
 .socials{display:flex;gap:1.45rem}
 .socials a{color:var(--muted);display:inline-flex;transition:opacity .2s;text-decoration:none}
-.socials a:hover{opacity:.7}
+.socials a:hover{opacity:.75}
 .socials svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5}
 
-/* mobile tweaks */
+/* mobile */
 @media(max-width:640px){
-  .topbar{padding-right:1rem;height:52px}
-  .nav{gap:1rem;font-size:.72rem}
-  .hero{min-height:calc(100vh - 52px);padding-top:52px}
+  .nav{right:1rem;gap:1rem;font-size:.72rem}
   .roles{font-size:.74rem}
 }
 </style>
 </head>
 <body>
 
-<!-- Top navigation bar -->
-<header class="topbar">
-  <nav class="nav">
-    <a href="about.html">about</a>
-    <a href="campaigns.html">campaigns</a>
-    <a href="reel.html">reel</a>
-    <a href="contact.html">contact</a>
-  </nav>
-</header>
+<!-- Navigation -->
+<nav class="nav">
+  <a href="about.html">about</a>
+  <a href="campaigns.html">campaigns</a>
+  <a href="reel.html">reel</a>
+  <a href="contact.html">contact</a>
+</nav>
 
-<!-- Hero section -->
+<!-- Hero -->
 <section class="hero">
   <h1><span>your</span> <span class="cursive">name</span></h1>
   <p class="roles">creative strategist · ai-driven video specialist · brand consultant</p>
   <a class="btn" href="learn-more.html">learn more</a>
 </section>
 
-<!-- Footer socials -->
+<!-- Social footer -->
 <footer>
   <div class="socials">
     <!-- YouTube -->
@@ -83,4 +79,18 @@ footer{position:absolute;bottom:1.2rem;width:100%;display:flex;justify-content:c
     </a>
     <!-- Discord -->
     <a aria-label="Discord" href="https://discord.com/" target="_blank">
-      <svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/><path d="M8.02 15.331c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44 0 1.35-.955 2.444-2.153 2.444Zm7.96 0c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44
+      <svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/><path d="M8.02 15.331c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44 0 1.35-.955 2.444-2.153 2.444Zm7.96 0c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44 0 1.35-.955 2.444-2.153 2.444Z"/></svg>
+    </a>
+    <!-- X -->
+    <a aria-label="X" href="https://x.com/" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg>
+    </a>
+    <!-- LinkedIn -->
+    <a aria-label="LinkedIn" href="https://linkedin.com/" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5ZM2 8.56h3.88v12.94H2zm6.14 0h3.7v1.77h.05c.51-.97 1.75-2 3.6-2 3.85 0 4.56 2.54 4.56 5.84V21.5h-3.88v-6.2c0-1.48-.03-3.39-2.07-3.39-2.07 0-2.39 1.62-2.39 3.29v6.3H8.14Z"/></svg>
+    </a>
+  </div>
+</footer>
+
+</body>
+</html>
