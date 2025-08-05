@@ -1,44 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Campaigns — Your Name</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>campaigns — your name</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courgette&display=swap" rel="stylesheet">
+
 <style>
-/* dark palette to match home */
-body{background:#0f0f0f;color:#e6e6e6;font-family:'Inter',sans-serif;margin:0}
-main{max-width:680px;margin:15vh auto 0;padding:0 1.5rem;text-align:left}
-
-/* heading */
-h1{
-  font-size:1.9rem;
-  font-weight:600;
-  margin-bottom:2rem;
-  color:#e6e6e6;
+:root{--bg:#0f0f0f;--text:#e6e6e6;--muted:#9ca3af}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 80% at -15% -15%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 60%);
+  filter:blur(80px);mix-blend-mode:overlay;
 }
 
-/* list */
+/* shared styles */
+.cursive{font-family:Courgette,cursive;font-style:normal}
+main{max-width:680px;margin:18vh auto 0;padding:0 1.5rem;position:relative;z-index:1;text-align:left}
+h1{font-size:1.9rem;font-weight:500;margin-bottom:2rem}
 ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1rem}
-li{font-size:.92rem;line-height:1.4}
-li a{
-  color:#e6e6e6;
-  text-decoration:none;
-  display:inline-block;
-  transition:color .15s ease,opacity .15s ease;
-}
-li a::before{content:"– ";color:#9ca3af}
-li a:hover{color:#c6c6c6;opacity:.9}   /* subtle grayscale shift */
-
-/* back link */
+li a{color:var(--text);text-decoration:none;font-size:.92rem;line-height:1.4;transition:color .15s ease}
+li a::before{content:"– ";color:var(--muted)}
+li a:hover{color:#c6c6c6}
 .back{margin-top:3rem}
-.back a{color:#e6e6e6;text-decoration:none;border-bottom:1px solid #444}
-.back a:hover{opacity:.8}
+.back a{color:var(--text);text-decoration:none;border-bottom:1px solid #444}
+.back a:hover{opacity:.75}
 </style>
 </head>
 <body>
 <main>
-  <h1>campaigns…</h1>
+  <h1><span class="cursive">campaigns…</span></h1>
 
   <ul>
     <li><a href="#">Community Informatics Corps, UIUC</a></li>
