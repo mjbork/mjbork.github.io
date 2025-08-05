@@ -1,36 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Your Name — Portfolio</title>
 
 <!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courgette&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courgette&display=swap" rel="stylesheet">
 
 <style>
-:root{--body:#0f0f0f;--bar:#090909;--text:#e6e6e6;--muted:#9ca3af}
+:root{
+  --body:#121212;      /* page bg   */
+  --bar:#0d0d0d;       /* top strip */
+  --bar-line:#1a1a1a;  /* thin line */
+  --text:#e6e6e6;
+  --muted:#9ca3af;
+}
+
+/* reset + base */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:Inter,sans-serif;background:var(--body);color:var(--text);scroll-behavior:smooth}
+html,body{height:100%;background:var(--body);color:var(--text);font-family:Inter,sans-serif;scroll-behavior:smooth}
 
 /* ===== TOP BAR ===== */
 .topbar{
-  position:fixed;top:0;left:0;width:100%;height:64px;      /* thick strip */
-  background:var(--bar);z-index:3;display:flex;align-items:center;justify-content:flex-end;padding-right:2rem
+  position:fixed;top:0;left:0;width:100%;height:60px;
+  background:var(--bar);border-bottom:1px solid var(--bar-line);
+  display:flex;justify-content:flex-end;align-items:center;padding-right:2rem;z-index:3;
 }
 .nav{display:flex;gap:1.4rem;font-size:.78rem;font-weight:500;letter-spacing:.02em}
 .nav a{color:var(--text);text-decoration:none;transition:opacity .2s}
 .nav a:hover{opacity:.7}
 
 /* ===== HERO ===== */
-.hero{
-  min-height:calc(100vh - 64px);         /* subtract bar height */
-  padding-top:64px;                      /* avoid overlap */
-  display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center
-}
+.hero{min-height:calc(100vh - 60px);padding-top:60px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
 .hero h1{font-size:clamp(2.1rem,5vw,3.5rem);font-weight:500}
 .hero h1 .cursive{font-family:Courgette,cursive;font-style:normal}
-.roles{margin-top:.7rem;font-size:.8rem;color:var(--muted);max-width:45rem;text-align:center}
+.roles{margin-top:.7rem;font-size:.8rem;color:var(--muted);max-width:45rem}
 .btn{margin-top:1.8rem;padding:.7rem 1.8rem;font-size:.82rem;color:var(--text);border:1px solid var(--text);border-radius:.34rem;background:transparent;text-decoration:none;transition:.2s}
 .btn:hover{background:var(--text);color:var(--body)}
 
@@ -41,16 +46,18 @@ footer{position:absolute;bottom:1.2rem;width:100%;display:flex;justify-content:c
 .socials a:hover{opacity:.7}
 .socials svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5}
 
+/* mobile tweaks */
 @media(max-width:640px){
-  .topbar{padding-right:1rem;height:56px}
+  .topbar{padding-right:1rem;height:52px}
   .nav{gap:1rem;font-size:.72rem}
-  .hero{min-height:calc(100vh - 56px);padding-top:56px}
+  .hero{min-height:calc(100vh - 52px);padding-top:52px}
   .roles{font-size:.74rem}
 }
 </style>
 </head>
 <body>
 
+<!-- Top navigation bar -->
 <header class="topbar">
   <nav class="nav">
     <a href="about.html">about</a>
@@ -60,14 +67,20 @@ footer{position:absolute;bottom:1.2rem;width:100%;display:flex;justify-content:c
   </nav>
 </header>
 
-<section class="hero" id="home">
+<!-- Hero section -->
+<section class="hero">
   <h1><span>your</span> <span class="cursive">name</span></h1>
   <p class="roles">creative strategist · ai-driven video specialist · brand consultant</p>
-  <a href="learn-more.html" class="btn">learn more</a>
+  <a class="btn" href="learn-more.html">learn more</a>
 </section>
 
+<!-- Footer socials -->
 <footer>
   <div class="socials">
     <!-- YouTube -->
     <a aria-label="YouTube" href="https://youtube.com/" target="_blank">
-      <svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12
+      <svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg>
+    </a>
+    <!-- Discord -->
+    <a aria-label="Discord" href="https://discord.com/" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/><path d="M8.02 15.331c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44 0 1.35-.955 2.444-2.153 2.444Zm7.96 0c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44
