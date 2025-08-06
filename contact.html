@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>contact — your name</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{--bg:#0f0f0f;--text:#e6e6e6;--muted:#9ca3af}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
+
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 80% at -15% -15%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 60%);
+  filter:blur(80px);mix-blend-mode:overlay;
+}
+
+main{max-width:680px;margin:18vh auto 0;padding:0 1.6rem;position:relative;z-index:1;text-align:center}
+h1{font-size:1.9rem;font-weight:500;margin-bottom:2rem;text-transform:lowercase}
+p{font-size:.9rem;color:var(--muted);margin-bottom:2.2rem}
+strong{color:var(--text)}
+.back a{color:var(--text);text-decoration:none;border-bottom:1px solid #444}
+.back a:hover{opacity:.75}
+</style>
+</head>
+<body>
+<main>
+  <h1>get in touch</h1>
+
+  <p>
+    email — <strong>[omastan2@gmail.com]</strong><br>
+    phone — <strong>[(217)721-1117]</strong>
+  </p>
+
+  <div class="back"><a href="index.html">← back to home</a></div>
+</main>
+</body>
+</html>
