@@ -1,95 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>About — Your Name</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --bg-dark: #0f0f0f;
-      --text-light: #e6e6e6;
-      --text-muted: #9ca3af;
-    }
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    html, body {
-      height: 100%;
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-dark);
-      color: var(--text-light);
-      scroll-behavior: smooth;
-      overflow-x: hidden;
-      padding: 2rem 1.5rem;
-      max-width: 720px;
-      margin: auto;
-    }
-    h1 {
-      font-size: 2rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      text-transform: lowercase;
-    }
-    p {
-      line-height: 1.5;
-      margin-bottom: 1.25rem;
-      font-size: 1rem;
-      color: var(--text-light);
-    }
-    strong {
-      color: var(--text-muted);
-    }
-    a {
-      color: var(--text-light);
-      text-decoration: underline;
-    }
-    a:hover {
-      opacity: 0.7;
-    }
-    .back-link {
-      margin-top: 3rem;
-      display: inline-block;
-      color: var(--text-muted);
-      text-decoration: none;
-      border-bottom: 1px solid #444;
-      font-size: 0.9rem;
-    }
-    .back-link:hover {
-      opacity: 0.7;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About Me — Your Name</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courgette&display=swap" rel="stylesheet">
+
+<style>
+:root{--bg:#0f0f0f;--text:#e6e6e6;--muted:#9ca3af}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
+
+/* subtle glow */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 80% at -15% -15%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 60%);
+  filter:blur(80px);mix-blend-mode:overlay;
+}
+
+.cursive{font-family:'Courgette',cursive;font-style:normal}
+
+main{max-width:800px;margin:16vh auto;padding:0 1.6rem;position:relative;z-index:1}
+h1{font-size:2rem;font-weight:500;margin-bottom:1.5rem;text-transform:lowercase}
+.cursive{font-family:'Courgette',cursive;font-style:normal}
+p{font-size:.94rem;line-height:1.7;color:var(--muted);margin-bottom:1.2rem}
+.back{margin-top:3rem}
+.back a{color:var(--text);text-decoration:none;border-bottom:1px solid #444}
+.back a:hover{opacity:.75}
+</style>
 </head>
 <body>
-  <h1>about me</h1>
+<main>
+  <h1>about <span class="cursive">me</span></h1>
+
   <p>
-    Born and raised in Baku, I completed my secondary education with my final year as an exchange student in Wisconsin, USA. I graduated with a BFA in Sculpture and Painting from the University of Illinois Urbana-Champaign in 2007, focusing on audio-video production and new media under the guidance of professor-turned-dean Kevin Hamilton. His mentorship shaped my approach to media as a tool for communities to represent themselves authentically.
-  </p>
-  <p>
-    Between 2006 and 2008, I worked as a videographer and editor at UIUC, collaborating on community and academic projects, including the Community Informatics Corps at the iSchool. Shortly after, I had a brief stint in Chicago as an assistant video editor before relocating to Boston from 2008 to 2012, where I edited branded content and PBS documentaries while obtaining professional certifications.
-  </p>
-  <p>
-    Since 2013, I have been based between Argentina and the United States, adapting to new cultures and languages while working remotely. My experience includes collaborating with volunteer organizations, producing multilingual multimedia campaigns, and continuously integrating AI-driven workflows and storytelling techniques into my creative practice.
-  </p>
-  <p>
-    I’m passionate about combining cross-cultural insights and advanced technology to craft impactful visual narratives that resonate with diverse audiences.
+    Born and raised in Baku, Azerbaijan, my formative years immersed me in diverse cultures and languages, shaping my professional and personal outlook. After completing early education in Baku, I spent my final high school year as an exchange student in Wisconsin, USA. Subsequently, I attended the University of Illinois Urbana-Champaign, earning a BFA in Sculpture and Painting, emphasizing audio-video production and new media. Under the mentorship of Kevin Hamilton, professor and now dean, I explored media as an instrument of agency—highlighting its potential to empower communities to narrate their own identities.
   </p>
 
-  <h2>experience highlights</h2>
   <p>
-    Over the years, I have led creative direction and video production for tech, lifestyle, and Web3 brands worldwide. My work spans long-form documentaries, branded content, social videos, and AI-accelerated pipelines for content creation. I’ve also contributed to community media projects in Argentina, helping build social presence and secure sponsorships for food banks and community centers.
+    My professional journey began at UIUC, serving as a videographer and editor while engaging in volunteer initiatives through the Graduate School of Library and Information Science (now iSchool) Community Informatics Corps. This involved collaborations on social entrepreneurship, community archives, and literacy programs. A brief period in Chicago was followed by relocation to Boston, expanding my multimedia expertise through involvement with PBS documentaries and similar projects, earning relevant certifications.
   </p>
 
-  <h2>volunteer work & collaborations</h2>
   <p>
-    My volunteer efforts include supporting community centers and food banks in Northwest Argentina, working with organizations such as <a href="https://bancodealimentostuc.org.ar" target="_blank" rel="noopener noreferrer">Banco de Alimentos Tucumán</a> and <a href="https://basalta.org.ar/" target="_blank" rel="noopener noreferrer">Banco de Alimentos Salta</a>. I have also helped integrate crypto-donation platforms in collaboration with local initiatives and Argentine crypto companies like Ripio and Satoshi Tango.
-  </p>
-  <p>
-    These experiences have enriched my understanding of social impact through media and technology while reinforcing my commitment to using storytelling for meaningful community engagement.
+    Since 2013, I have primarily lived in northwest Argentina, adapting to a new language and culture while delivering multilingual media campaigns in English, Spanish, and Portuguese. Leveraging advanced generative AI tools and traditional workflows, my deep interest in AI technology continually drives my creative strategies, recognizing AI’s integral role in digital content's future.
   </p>
 
-  <a href="index.html" class="back-link">← back to home</a>
+  <p>
+    Additionally, my experience as an amateur boxer—including Illinois State Champion and Chicago Golden Gloves finalist—developed discipline, strategic thinking, and adaptability, traits I apply effectively to demanding professional environments.
+  </p>
+
+  <p>
+    Currently dividing my time between Argentina and the U.S., I seek professional collaborations that value strategic creativity, cultural sensitivity, and innovation.
+  </p>
+
+  <div class="back"><a href="index.html">← back to home</a></div>
+</main>
 </body>
 </html>
