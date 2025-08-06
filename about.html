@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Your Name – Portfolio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
+  <title>ORJM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&family=Courgette&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg-dark: #0f0f0f;
@@ -24,7 +24,6 @@
       scroll-behavior: smooth;
       overflow-x: hidden;
     }
-    /* Left shine effect */
     body::before {
       content: "";
       pointer-events: none;
@@ -37,8 +36,6 @@
       mix-blend-mode: overlay;
       z-index: 0;
     }
-
-    /* Navigation */
     .nav {
       position: absolute;
       top: 1.2rem;
@@ -59,8 +56,6 @@
     .nav a:hover {
       opacity: 0.7;
     }
-
-    /* Hero section */
     .hero {
       position: relative;
       z-index: 1;
@@ -72,7 +67,6 @@
       text-align: center;
       padding: 0 2rem;
     }
-
     .hero h1 {
       position: relative;
       font-size: clamp(2.1rem, 5vw, 3.5rem);
@@ -80,6 +74,7 @@
       color: var(--text-light);
       z-index: 1;
       text-transform: lowercase;
+      user-select: none;
     }
     .hero h1::before {
       content: "your name";
@@ -95,14 +90,20 @@
       pointer-events: none;
       user-select: none;
     }
-
+    .hero h1 .normal {
+      font-family: 'Inter', sans-serif;
+      font-style: normal;
+    }
+    .hero h1 .cursive {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+    }
     .roles {
       margin-top: 0.7rem;
       font-size: 0.8rem;
       color: var(--text-muted);
       max-width: 45rem;
     }
-
     .btn {
       margin-top: 1.8rem;
       padding: 0.7rem 1.8rem;
@@ -119,8 +120,6 @@
       background: var(--text-light);
       color: var(--bg-dark);
     }
-
-    /* Footer social icons */
     footer {
       position: absolute;
       bottom: 1.2rem;
@@ -149,7 +148,6 @@
       fill: none;
       stroke-width: 1.5;
     }
-
     @media(max-width: 640px) {
       .nav {
         right: 1rem;
@@ -171,7 +169,7 @@
   </nav>
 
   <section class="hero" id="home">
-    <h1>your name</h1>
+    <h1><span class="normal">orkhan</span> <span class="cursive">mastanov</span></h1>
     <p class="roles">creative strategist · ai-driven video specialist · brand consultant</p>
     <a href="learn-more.html" class="btn">learn more</a>
   </section>
@@ -187,7 +185,7 @@
       <a aria-label="X" href="https://x.com/" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg>
       </a>
-      <a aria-label="LinkedIn" href="https://linkedin.com/" target="_blank" rel="noopener noreferrer">
+      <a aria-label="LinkedIn" href="https://www.linkedin.com/in/orkhanmastanov" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5Zm.06 3.74H1.48v13.7h2.52v-13.7Zm6.85-4.94c-1.57 0-2.53.86-2.96 1.55v-1.34H5v13.7h2.41v-7.83c0-.41.03-.83.15-1.12.38-.92 1.25-1.88 2.71-1.88 1.91 0 2.67 1.41 2.67 3.48v7.35h2.42v-7.91c0-4.11-2.18-6.04-5.09-6.04z"/></svg>
       </a>
     </div>
