@@ -1,61 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ORJM</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Name – Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-dark: #0f0f0f;
+      --text-light: #e6e6e6;
+      --text-muted: #9ca3af;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+    /* Left shine effect */
+    body::before {
+      content: "";
+      pointer-events: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 160vw; height: 160vh;
+      background: radial-gradient(120% 95% at -15% 20%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.10) 38%, rgba(255,255,255,0) 72%);
+      transform: translateX(-12%) translateY(-12%) rotate(5deg);
+      filter: blur(90px);
+      mix-blend-mode: overlay;
+      z-index: 0;
+    }
 
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courgette&display=swap" rel="stylesheet">
+    /* Navigation */
+    .nav {
+      position: absolute;
+      top: 1.2rem;
+      right: 2.4rem;
+      display: flex;
+      gap: 1.4rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      z-index: 2;
+    }
+    .nav a {
+      color: var(--text-light);
+      text-decoration: none;
+      transition: opacity 0.2s;
+      text-transform: lowercase;
+    }
+    .nav a:hover {
+      opacity: 0.7;
+    }
 
-<style>
-:root{--bg:#0f0f0f;--text:#e6e6e6;--muted:#9ca3af}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
+    /* Hero section */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 2rem;
+    }
 
-/* subtle glow */
-body::before{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(120% 80% at -15% -15%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 60%);
-  filter:blur(80px);mix-blend-mode:overlay;
-}
+    .hero h1 {
+      position: relative;
+      font-size: clamp(2.1rem, 5vw, 3.5rem);
+      font-weight: 500;
+      color: var(--text-light);
+      z-index: 1;
+      text-transform: lowercase;
+    }
+    .hero h1::before {
+      content: "your name";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      color: transparent;
+      text-shadow:
+        0 0 8px rgba(255, 255, 255, 0.4),
+        0 0 15px rgba(255, 255, 255, 0.3),
+        0 0 25px rgba(255, 255, 255, 0.2);
+      filter: blur(4px);
+      z-index: -1;
+      pointer-events: none;
+      user-select: none;
+    }
 
-.cursive{font-family:'Courgette',cursive;font-style:normal}
+    .roles {
+      margin-top: 0.7rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      max-width: 45rem;
+    }
 
-main{max-width:800px;margin:16vh auto;padding:0 1.6rem;position:relative;z-index:1}
-h1{font-size:2rem;font-weight:500;margin-bottom:1.5rem;text-transform:lowercase}
-.cursive{font-family:'Courgette',cursive;font-style:normal}
-p{font-size:.94rem;line-height:1.7;color:var(--muted);margin-bottom:1.2rem}
-.back{margin-top:3rem}
-.back a{color:var(--text);text-decoration:none;border-bottom:1px solid #444}
-.back a:hover{opacity:.75}
-</style>
+    .btn {
+      margin-top: 1.8rem;
+      padding: 0.7rem 1.8rem;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      background: transparent;
+      border: 1px solid var(--text-light);
+      border-radius: 0.34rem;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+      text-transform: lowercase;
+    }
+    .btn:hover {
+      background: var(--text-light);
+      color: var(--bg-dark);
+    }
+
+    /* Footer social icons */
+    footer {
+      position: absolute;
+      bottom: 1.2rem;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      z-index: 1;
+    }
+    .socials {
+      display: flex;
+      gap: 1.45rem;
+      align-items: center;
+    }
+    .socials a {
+      color: var(--text-muted);
+      display: inline-flex;
+      transition: opacity 0.2s;
+    }
+    .socials a:hover {
+      opacity: 0.7;
+    }
+    .socials svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
+    }
+
+    @media(max-width: 640px) {
+      .nav {
+        right: 1rem;
+        gap: 1rem;
+        font-size: 0.72rem;
+      }
+      .roles {
+        font-size: 0.74rem;
+      }
+    }
+  </style>
 </head>
 <body>
-<main>
-  <h1>about <span class="cursive">me</span></h1>
+  <nav class="nav">
+    <a href="about.html">about</a>
+    <a href="campaigns.html">campaigns</a>
+    <a href="reel.html">reel</a>
+    <a href="contact.html">contact</a>
+  </nav>
 
-  <p>
-    Born in Baku, my formative years immersed me in diverse cultures and languages, shaping my professional and personal outlook. After completing early education in Baku, I spent my final high school year as an exchange student in Wisconsin, USA. Subsequently, I attended the University of Illinois Urbana-Champaign, earning a BFA in Sculpture and Painting, emphasizing audio-video production and new media. Under the mentorship of Kevin Hamilton, professor and now dean, I explored media as an instrument of agency—highlighting its potential to empower communities to narrate their own identities.
-  </p>
+  <section class="hero" id="home">
+    <h1>your name</h1>
+    <p class="roles">creative strategist · ai-driven video specialist · brand consultant</p>
+    <a href="learn-more.html" class="btn">learn more</a>
+  </section>
 
-  <p>
-    My professional journey began at UIUC, serving as a videographer and editor while engaging in volunteer initiatives through the Graduate School of Library and Information Science (now iSchool) Community Informatics Corps. This involved collaborations on social entrepreneurship, community archives, and literacy programs. A brief period in Chicago was followed by relocation to Boston, expanding my multimedia expertise through involvement with PBS documentaries and similar projects, earning relevant certifications.
-  </p>
-
-  <p>
-    Since 2013, I have primarily lived in northwest Argentina, adapting to a new language and culture while delivering multilingual media campaigns in English, Spanish, and Portuguese. Leveraging advanced generative AI tools and traditional workflows, my deep interest in AI technology continually drives my creative strategies, recognizing AI’s integral role in digital content's future.
-  </p>
-
-  <p>
-    Additionally, my experience as an amateur boxer—including Illinois State Champion and Chicago Golden Gloves finalist—developed discipline, strategic thinking, and adaptability, traits I apply effectively to demanding professional environments.
-  </p>
-
-  <p>
-    Currently dividing my time between Argentina and the U.S., I seek professional collaborations that value strategic creativity, cultural sensitivity, and innovation.
-  </p>
-
-  <div class="back"><a href="index.html">← back to home</a></div>
-</main>
+  <footer>
+    <div class="socials">
+      <a aria-label="YouTube" href="https://youtube.com/" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg>
+      </a>
+      <a aria-label="Discord" href="https://discord.com/" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/><path d="M8.02 15.331c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44 0 1.35-.955 2.444-2.153 2.444Zm7.96 0c-1.183 0-2.153-1.093-2.153-2.444 0-1.35.955-2.44 2.153-2.44 1.205 0 2.17 1.1 2.153 2.44 0 1.35-.955 2.444-2.153 2.444Z"/></svg>
+      </a>
+      <a aria-label="X" href="https://x.com/" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg>
+      </a>
+      <a aria-label="LinkedIn" href="https://linkedin.com/" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5Zm.06 3.74H1.48v13.7h2.52v-13.7Zm6.85-4.94c-1.57 0-2.53.86-2.96 1.55v-1.34H5v13.7h2.41v-7.83c0-.41.03-.83.15-1.12.38-.92 1.25-1.88 2.71-1.88 1.91 0 2.67 1.41 2.67 3.48v7.35h2.42v-7.91c0-4.11-2.18-6.04-5.09-6.04z"/></svg>
+      </a>
+    </div>
+  </footer>
 </body>
 </html>
