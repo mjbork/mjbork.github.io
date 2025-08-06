@@ -1,30 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>learn more — your name</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Learn More — Your Name</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courgette&display=swap" rel="stylesheet" />
 <style>
-:root{--bg:#0f0f0f;--text:#e6e6e6;--muted:#9ca3af}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
-body::before{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(120% 80% at -15% -15%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 60%);
-  filter:blur(80px);mix-blend-mode:overlay;
-}
-
-main{max-width:760px;margin:18vh auto 0;padding:0 1.6rem;position:relative;z-index:1}
-h1{font-size:1.9rem;font-weight:500;margin-bottom:1.4rem;text-transform:lowercase}
-h2{font-size:1.05rem;margin:2.2rem 0 .8rem}
-p,li{font-size:.9rem;line-height:1.6;color:var(--muted)}
-ul{list-style:disc;margin:0 0 1.8rem 1.2rem}
-.back{margin-top:3rem}
-.back a{color:var(--text);text-decoration:none;border-bottom:1px solid #444}
-.back a:hover{opacity:.75}
+  :root {
+    --bg: #0f0f0f;
+    --text: #e6e6e6;
+    --muted: #9ca3af;
+  }
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(120% 80% at -15% -15%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 60%);
+    filter: blur(80px);
+    mix-blend-mode: overlay;
+  }
+  main {
+    max-width: 760px;
+    margin: 18vh auto 0;
+    padding: 0 1.6rem;
+    position: relative;
+    z-index: 1;
+  }
+  h1 {
+    font-size: 2rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    text-transform: lowercase;
+  }
+  .cursive {
+    font-family: 'Courgette', cursive;
+    font-style: normal;
+  }
+  p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+  }
+  ul {
+    margin: 0 0 1.6rem 1.5rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  ul li {
+    margin-bottom: 0.6rem;
+  }
+  .section-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 1.8rem;
+    margin-bottom: 0.8rem;
+    text-transform: uppercase;
+    font-size: 1rem;
+  }
+  .back {
+    margin-top: 3rem;
+  }
+  .back a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid #444;
+  }
+  .back a:hover {
+    opacity: 0.75;
+  }
 </style>
 </head>
 <body>
@@ -32,40 +90,28 @@ ul{list-style:disc;margin:0 0 1.8rem 1.2rem}
   <h1>creative strategy + <span class="cursive">AI-powered storytelling</span></h1>
 
   <p>
-    I’m a multilingual creative strategist and full-stack videographer with
-    <strong>10 + years</strong> turning performance data and generative AI into
-    scroll-stopping stories for global tech, lifestyle, and emerging-media brands.
-    Fluent in English, Spanish, and Portuguese markets, I fuse analytics with
-    cross-cultural nuance to make every frame count.
+    I’m a multilingual creative strategist and full-stack videographer with 10+ years turning performance data and generative AI into scroll-stopping stories for global tech, lifestyle, and emerging-media brands. Fluent in English, Spanish, and Portuguese markets, I fuse analytics with cross-cultural nuance to make every frame count.
   </p>
 
-  <h2>signature workflow</h2>
+  <div class="section-title">signature workflow</div>
   <ul>
-    <li><strong>Insight-first ideation&nbsp;</strong>—briefs originate from multi-platform
-        trend tools and audience diagnostics to ensure content solves real demand.</li>
-    <li><strong>Generative acceleration&nbsp;</strong>—VEO, Runway, Sora, Pika create concept
-        frames, alt cuts, and motion tests in hours, not days.</li>
-    <li><strong>Algorithm fluency&nbsp;</strong>—metadata, thumbnails, and cadence
-        engineered for search, recommendation, and feed ranking across video, web,
-        and social surfaces.</li>
-    <li><strong>Chatbot co-creation&nbsp;</strong>—LLMs (ChatGPT, Claude) speed prompts,
-        script drafts, outlines, and multilingual metadata tagging.</li>
-    <li><strong>Cross-platform craft&nbsp;</strong>—Premiere, Resolve, After Effects for
-        master edits; localized variants via automated translation flows and kinetic
-        text graphics.</li>
-    <li><strong>Exec-ready reporting&nbsp;</strong>—lightweight slide decks link retention
-        lift and CPC/CPA savings directly to creative decisions.</li>
+    <li>Insight-first ideation — briefs originate from multi-platform trend tools and audience diagnostics to ensure content solves real demand.</li>
+    <li>Generative acceleration — VEO, Runway, Sora, Pika create concept frames, alt cuts, and motion tests in hours, not days.</li>
+    <li>Algorithm fluency — metadata, thumbnails, and cadence engineered for search, recommendation, and feed ranking across video, web, and social surfaces.</li>
+    <li>Chatbot co-creation — LLMs (ChatGPT, Claude) speed prompts, script drafts, outlines, and multilingual metadata tagging.</li>
+    <li>Cross-platform craft — Premiere, Resolve, After Effects for master edits; localized variants via automated translation flows and kinetic text graphics.</li>
+    <li>Exec-ready reporting — lightweight slide decks link retention lift and CPC/CPA savings directly to creative decisions.</li>
   </ul>
 
-  <h2>toolkit at a glance</h2>
-  <p>
-    <strong>Generative AI:</strong> VEO · Runway Gen-2 · Sora · Pika<br>
-    <strong>LLMs &amp; chatbots:</strong> ChatGPT · Claude (prompt design, automation)<br>
-    <strong>Edit &amp; motion:</strong> Premiere Pro · After Effects · DaVinci Resolve<br>
-    <strong>Digital marketing &amp; SEO/ASO:</strong> Ahrefs · SEMrush · SurferSEO · vidIQ · TubeBuddy · RankMath<br>
-    <strong>Analytics dashboards:</strong> platform studios · ad-manager insights · custom Data Studio blends<br>
-    <strong>Languages:</strong> fluent EN · ES · RU · TR · AZ | advanced PT
-  </p>
+  <div class="section-title">toolkit at a glance</div>
+  <ul>
+    <li>Generative AI: VEO · Runway Gen-2 · Sora · Pika</li>
+    <li>LLMs & chatbots: ChatGPT · Claude (prompt design, automation)</li>
+    <li>Edit & motion: Premiere Pro · After Effects · DaVinci Resolve</li>
+    <li>Digital marketing & SEO/ASO: Ahrefs · SEMrush · SurferSEO · vidIQ · TubeBuddy · RankMath</li>
+    <li>Analytics dashboards: platform studios · ad-manager insights · custom Data Studio blends</li>
+    <li>Languages: fluent EN · ES · RU · TR · AZ | advanced PT</li>
+  </ul>
 
   <div class="back"><a href="index.html">← back to home</a></div>
 </main>
