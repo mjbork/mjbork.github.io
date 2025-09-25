@@ -24,12 +24,16 @@
     position:relative; z-index:1; min-height:100vh;
     display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 2rem;
   }
-  .hero h1{ position:relative; z-index:2; font-size:clamp(2.1rem,5vw,3.8rem); font-weight:500; text-transform:lowercase; }
-  .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
+  .hero h1{
+    position:relative; z-index:2; font-size:clamp(2.4rem,6vw,4.2rem); font-weight:500; text-transform:lowercase;
+  }
+  .cursive{ font-family:'Playfair Display',serif; font-style:italic; display:inline-block; }
   .roles{ margin-top:.7rem; font-size:.95rem; color:var(--muted); max-width:45rem; text-wrap:balance; }
   .btn{
-    margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.85rem; border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
-    text-decoration:none; text-transform:lowercase; display:inline-block; transition:background .2s,color .2s,transform .2s;
+    margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.9rem;
+    border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
+    text-decoration:none; text-transform:lowercase; display:inline-block;
+    transition:background .2s,color .2s,transform .2s, letter-spacing .15s ease, filter .15s ease;
   }
   .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
 
@@ -40,7 +44,7 @@
   .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
   .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
-  /* Optional gentle orb behind the wordmark */
+  /* Gentle orb under title (optional) */
   .orb{
     position:absolute; z-index:1; left:50%; top:50%; translate:-50% -50%;
     width:min(60vw,660px); aspect-ratio:1/1; border-radius:50%;
@@ -48,8 +52,12 @@
     filter:blur(.2px); pointer-events:none;
   }
 
-  /* Micro-dot canvas */
+  /* Mesh canvas */
   .fx-canvas{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+  /* Per-letter distortion hooks */
+  #title .ch{ display:inline-block; will-change:transform, filter; }
+  #learn .ch{ display:inline-block; will-change:transform, filter; }
 
   @media(max-width:640px){
     .nav{ right:1rem; gap:1rem; font-size:.72rem; }
@@ -69,9 +77,19 @@
 
   <section class="hero" id="home">
     <div class="orb" id="orb" aria-hidden="true"></div>
-    <h1 id="title"><span class="cursive">orjm</span></h1>
+
+    <!-- Title letters split into spans so we can distort per-letter -->
+    <h1 id="title" aria-label="orjm"><span class="cursive">
+      <span class="ch">o</span><span class="ch">r</span><span class="ch">j</span><span class="ch">m</span>
+    </span></h1>
+
     <p class="roles">strategist · ai-driven video · brand consultant</p>
-    <a class="btn" href="learn-more.html">learn more</a>
+
+    <!-- Button letters split too -->
+    <a id="learn" class="btn" href="learn-more.html" aria-label="learn more">
+      <span class="ch">l</span><span class="ch">e</span><span class="ch">a</span><span class="ch">r</span><span class="ch">n</span>&nbsp;
+      <span class="ch">m</span><span class="ch">o</span><span class="ch">r</span><span class="ch">e</span>
+    </a>
   </section>
 
   <footer>
@@ -85,54 +103,59 @@
 
 <script>
 /* =========================================================
-   RED CHAIN-LINK MICRO-DOTS
-   - Full-screen dot grid
-   - Cursor displaces dots like touching chain-link
-   - Dots/lines fade in with motion, fade out smoothly at rest
-   - No hook/leader logic
+   RED CHAIN-LINK made of CLUSTERS (mini-dots)
+   - Each grid node is a tight cluster of micro-dots
+   - Cursor displaces like touching chain-link
+   - Smooth fade-out when idle
+   - Title and "learn more" subtly distort near the cursor
 ========================================================= */
 (function(){
   const canvas = document.getElementById('fx');
   const ctx = canvas.getContext('2d');
   if(!ctx) return;
 
-  // ---------- Tuning ----------
-  const COLOR_DOT  = '200,40,40';    // red dots
-  const COLOR_LINE = '200,40,40';    // red lines
-  const GAP   = 48;                  // grid spacing (smaller = denser)
-  const RMIN  = 0.9, RMAX = 1.6;     // dot radius (CSS px)
-  const DOT_ALPHA_BASE  = 0.20;      // base opacity (scaled by activity)
-  const LINE_ALPHA_BASE = 0.10;      // base line opacity near cursor
+  /* ---------- Visual ---------- */
+  const DOT_RGB   = '200,40,40';  // red
+  const GAP       = 46;           // grid spacing (denser mesh if smaller)
+  const CLUSTER_N = 8;            // micro-dots per node (6–12 looks good)
+  const CLUSTER_R = 5;            // cluster radius in CSS px (tight bunch)
+  const MICRO_R   = [0.35, 0.9];  // micro-dot radius range (CSS px)
+  const DOT_ALPHA = 0.22;         // micro-dot base alpha (scaled by activity)
+  const DRAW_LINKS= true;         // faint connections near the cursor
+  const LINK_ALPHA_BASE = 0.08;
+  const LINK_RADIUS = 210;        // px around cursor to draw links
 
-  // Physics (smooth, non-rubbery)
-  const DAMP   = 0.970;  // viscosity (higher = smoother, longer settle)
-  const SPRING = 0.009;  // return to origin
-  const NOISE  = 0.006;  // tiny organic shimmer
+  /* ---------- Physics (silky) ---------- */
+  const DAMP   = 0.972;  // smoother settle
+  const SPRING = 0.008;  // soft return to origin
+  const NOISE  = 0.006;  // tiny shimmer
 
-  // Cursor influence (mesh push)
-  const R_INFL   = 180;  // influence radius (px)
-  const FORCE    = 0.30; // push strength from cursor velocity
-  const RADIAL   = 0.55; // how much push is radial away from cursor
-  const TANGENT  = 0.15; // slight curl
+  // Cursor influence
+  const INFL_R    = 190;  // influence radius (px)
+  const PUSH      = 0.32; // displacement strength from motion
+  const RADIAL    = 0.6;  // radial push away from cursor
+  const TANGENTIAL= 0.12; // slight curl
+  const ALONG     = 0.16; // tug along motion
 
-  // Visibility (motion-activated with smooth fade)
-  let activity = 0;                 // 0..1
-  const MOVE_BOOST     = 0.18;      // bump per movement
-  const SPEED_GAIN     = 0.55;      // extra from speed
-  const ACTIVITY_DECAY = 0.010;     // lower = longer fade (smooth)
+  /* ---------- Visibility (smooth fade) ---------- */
+  let activity = 0;              // 0..1
+  const MOVE_BOOST     = 0.16;   // bump per motion
+  const SPEED_GAIN     = 0.55;   // extra from speed
+  const ACTIVITY_DECAY = 0.0075; // slower decay → smoother fade-out
 
-  // Lines drawn only near cursor
-  const DRAW_LINES      = true;
-  const LINE_RADIUS     = 220;      // where to draw connections (px)
-
-  // ---------- State ----------
+  /* ---------- State ---------- */
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
   let W=0, H=0, cols=0, rows=0;
-  let dots=[]; // row-major
+  const nodes = []; // [{x,y,ox,oy,vx,vy,cluster:[{ox,oy,r}]}]
+
   const cursor = { tx:null, ty:null, x:null, y:null, px:0, py:0, vx:0, vy:0 };
   const EASE = 0.14;
 
-  function idx(i,j){ return j*cols + i; }
+  // Distortion targets (letters)
+  const title = document.getElementById('title');
+  const learn = document.getElementById('learn');
+  const titleLetters = Array.from(title.querySelectorAll('.ch'));
+  const learnLetters = Array.from(learn.querySelectorAll('.ch'));
 
   function resize(){
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -141,23 +164,87 @@
     canvas.style.width  = innerWidth + 'px';
     canvas.style.height = innerHeight + 'px';
 
+    nodes.length = 0;
     cols = Math.ceil(innerWidth / GAP) + 2;
     rows = Math.ceil(innerHeight/ GAP) + 2;
 
-    dots = new Array(cols*rows);
     for(let j=0;j<rows;j++){
       for(let i=0;i<cols;i++){
-        const ox = (i*GAP);
-        const oy = (j*GAP);
-        const x = ox * dpr, y = oy * dpr;
-        const r = (RMIN + Math.random()*(RMAX-RMIN)) * dpr;
-        dots[idx(i,j)] = { x, y, ox:x, oy:y, vx:0, vy:0, r };
+        const ox_css = i*GAP + (j%2 ? GAP/2 : 0); // slight stagger
+        const oy_css = j*GAP + 20;
+        const x = ox_css * dpr, y = oy_css * dpr;
+
+        // build cluster blueprint (in CSS px, relative to node center)
+        const cluster = [];
+        for(let k=0;k<CLUSTER_N;k++){
+          const a = (k/CLUSTER_N)*Math.PI*2 + Math.random()*0.6;
+          const rr = (CLUSTER_R*(0.55 + Math.random()*0.45));
+          cluster.push({
+            ox: Math.cos(a)*rr,
+            oy: Math.sin(a)*rr,
+            r:  (MICRO_R[0] + Math.random()*(MICRO_R[1]-MICRO_R[0]))
+          });
+        }
+
+        nodes.push({ x, y, ox:x, oy:y, vx:0, vy:0, cluster });
       }
     }
   }
 
+  function distortLetters(){
+    if(cursor.x == null) {
+      [...titleLetters, ...learnLetters].forEach(el => { el.style.transform='translate3d(0,0,0)'; el.style.filter='none'; });
+      learn.style.letterSpacing = '';
+      return;
+    }
+    const cx = cursor.x, cy = cursor.y;
+
+    // Helper to apply distortion to a set of letters
+    function apply(letters, maxShiftPx, radiusPx){
+      const r2 = radiusPx*radiusPx;
+      for(const el of letters){
+        const b = el.getBoundingClientRect();
+        const ex = (b.left + b.width/2);
+        const ey = (b.top  + b.height/2);
+        const dx = ex - cx;
+        const dy = ey - cy;
+        const d2 = dx*dx + dy*dy;
+        if(d2 > r2){
+          el.style.transform = 'translate3d(0,0,0)';
+          el.style.filter = 'none';
+          continue;
+        }
+        const fall = Math.exp(-d2/(2*r2));
+        const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
+        const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
+        const tx = -uy, ty = ux;
+
+        // shift = radial away + a bit along motion
+        const rlen = Math.max(1e-6, Math.hypot(dx,dy));
+        const rx = dx/rlen, ry = dy/rlen;
+        const sx = (rx*0.7 + ux*0.3) * maxShiftPx * fall * activity;
+        const sy = (ry*0.7 + uy*0.3) * maxShiftPx * fall * activity;
+
+        el.style.transform = `translate3d(${sx}px, ${sy}px, 0)`;
+        // slight blur/contrast to feel like “pressed under mesh”
+        const blur = Math.min(1.2, 0.8 * fall * activity);
+        el.style.filter = blur > 0.02 ? `blur(${blur}px) contrast(${1 + 0.12*fall})` : 'none';
+      }
+    }
+
+    apply(titleLetters, 10, 220); // max 10px shift within ~220px
+    apply(learnLetters, 6, 180);  // gentler on button
+
+    // subtle letter-spacing change based on local pressure
+    const learnRect = learn.getBoundingClientRect();
+    const dx = (learnRect.left + learnRect.width/2) - cx;
+    const dy = (learnRect.top  + learnRect.height/2) - cy;
+    const fall = Math.exp(-(dx*dx+dy*dy)/(2*180*180));
+    learn.style.letterSpacing = (fall>0.02) ? `${0.5*fall*activity}px` : '';
+  }
+
   function step(){
-    // Smooth cursor + velocity
+    // Smooth cursor + velocity (CSS px)
     if(cursor.tx != null){
       if(cursor.x == null){ cursor.x = cursor.tx; cursor.y = cursor.ty; cursor.px = cursor.x; cursor.py = cursor.y; }
       cursor.x += (cursor.tx - cursor.x) * EASE;
@@ -165,112 +252,97 @@
       cursor.vx = (cursor.x - cursor.px);
       cursor.vy = (cursor.y - cursor.py);
       const vmag = Math.hypot(cursor.vx, cursor.vy);
-
-      // Activity rises with motion (then decays below)
       activity = Math.min(1, activity + MOVE_BOOST + SPEED_GAIN * Math.min(1, vmag/28));
-
       cursor.px = cursor.x; cursor.py = cursor.y;
     }
     activity = Math.max(0, activity - ACTIVITY_DECAY);
 
     ctx.clearRect(0,0,W,H);
 
-    const gate = Math.pow(activity, 1.2); // gentle fade curve
-    const rInfl2 = (R_INFL*R_INFL);
-    const rLine2 = (LINE_RADIUS*LINE_RADIUS);
+    // Precompute
+    const gate = Math.pow(activity, 1.15); // smooth fade
+    const infl2 = INFL_R*INFL_R;
+    const link2 = LINK_RADIUS*LINK_RADIUS;
 
-    // Precompute unit vectors for tangent/radial push
     const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
-    const ux = cursor.vx / vmag, uy = cursor.vy / vmag; // direction of motion
-    const tx = -uy, ty = ux; // perpendicular
+    const ux = cursor.vx/vmag, uy = cursor.vy/vmag; // along motion
+    const tx = -uy, ty = ux;                        // tangent
 
-    // Update dynamics
-    for(let j=0;j<rows;j++){
-      for(let i=0;i<cols;i++){
-        const p = dots[idx(i,j)];
+    // Update nodes
+    for(let n of nodes){
+      // Spring to origin
+      n.vx += (n.ox - n.x) * SPRING;
+      n.vy += (n.oy - n.y) * SPRING;
 
-        // Spring back to original
-        p.vx += (p.ox - p.x) * SPRING;
-        p.vy += (p.oy - p.y) * SPRING;
-
-        // Cursor displacement field (like pressing chain-link)
-        if(cursor.x != null && activity > 0){
-          const dx = (p.x/dpr - cursor.x);
-          const dy = (p.y/dpr - cursor.y);
-          const d2 = dx*dx + dy*dy;
-          if(d2 < rInfl2){
-            const fall = Math.exp(-d2/(2*rInfl2)); // soft Gaussian falloff
-            // Radial push away from cursor + slight tangent curl + along-motion tug
-            const mag = FORCE * fall * dpr;
-            const rlen = Math.max(1e-6, Math.hypot(dx,dy));
-            const rx = (dx/rlen), ry = (dy/rlen); // radial away
-            p.vx += (rx*RADIAL + tx*TANGENT + ux*0.15) * mag;
-            p.vy += (ry*RADIAL + ty*TANGENT + uy*0.15) * mag;
-          }
+      // Displacement from cursor (chain-link push)
+      if(cursor.x != null && gate > 0){
+        const dx = (n.x/dpr - cursor.x);
+        const dy = (n.y/dpr - cursor.y);
+        const d2 = dx*dx + dy*dy;
+        if(d2 < infl2){
+          const fall = Math.exp(-d2/(2*infl2));
+          const rlen = Math.max(1e-6, Math.hypot(dx,dy));
+          const rx = dx/rlen, ry = dy/rlen;
+          const mag = PUSH * fall * dpr;
+          n.vx += (rx*RADIAL + tx*TANGENTIAL + ux*ALONG) * mag;
+          n.vy += (ry*RADIAL + ty*TANGENTIAL + uy*ALONG) * mag;
         }
-
-        // Subtle shimmer to avoid dead stillness
-        p.vx += (Math.random()-0.5)*NOISE;
-        p.vy += (Math.random()-0.5)*NOISE;
-
-        // Integrate with damping
-        p.vx *= DAMP; p.vy *= DAMP;
-        p.x  += p.vx; p.y  += p.vy;
       }
+
+      // Subtle shimmer
+      n.vx += (Math.random()-0.5)*NOISE;
+      n.vy += (Math.random()-0.5)*NOISE;
+
+      // Integrate
+      n.vx *= DAMP; n.vy *= DAMP;
+      n.x  += n.vx; n.y  += n.vy;
     }
 
-    // Draw dots (fade by activity)
+    // Draw clusters
     if(gate > 0.002){
-      for(let j=0;j<rows;j++){
-        for(let i=0;i<cols;i++){
-          const p = dots[idx(i,j)];
-          // Slightly brighten where flow is faster
-          const speed = Math.min(1, Math.hypot(p.vx, p.vy) / (1.2*dpr));
-          const a = (DOT_ALPHA_BASE + speed*0.12) * gate;
-          if(a > 0.008){
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-            ctx.fillStyle = `rgba(${COLOR_DOT},${a})`;
-            ctx.fill();
-          }
+      for(let n of nodes){
+        // micro-dots
+        for(let m of n.cluster){
+          const px = n.x + m.ox*dpr;
+          const py = n.y + m.oy*dpr;
+          const r  = m.r * dpr*0.9;
+          ctx.beginPath();
+          ctx.arc(px, py, r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${DOT_RGB},${DOT_ALPHA*gate})`;
+          ctx.fill();
         }
       }
     }
 
-    // Optional links near the cursor to sell the net feeling
-    if(DRAW_LINES && gate > 0.002 && cursor.x != null){
-      ctx.lineWidth = 1 * (dpr>1?0.75:1);
+    // Optional faint links near cursor (sells the “mesh”)
+    if(DRAW_LINKS && gate > 0.002 && cursor.x != null){
+      ctx.lineWidth = (dpr>1?0.75:1);
       for(let j=0;j<rows;j++){
         for(let i=0;i<cols;i++){
-          const p = dots[idx(i,j)];
-          const dx = (p.x/dpr - cursor.x);
-          const dy = (p.y/dpr - cursor.y);
+          const idx = j*cols + i;
+          const a = nodes[idx];
+          const dx = (a.x/dpr - cursor.x);
+          const dy = (a.y/dpr - cursor.y);
           const d2 = dx*dx + dy*dy;
-          if(d2 < rLine2){
-            const w = Math.exp(-d2/(2*rLine2));
-            const a = LINE_ALPHA_BASE * gate * (0.6 + 0.4*w);
-            ctx.strokeStyle = `rgba(${COLOR_LINE},${a})`;
+          if(d2 > link2) continue;
+          const w = Math.exp(-d2/(2*link2));
+          const alpha = LINK_ALPHA_BASE * gate * (0.6 + 0.4*w);
+          ctx.strokeStyle = `rgba(${DOT_RGB},${alpha})`;
 
-            // right neighbor
-            if(i < cols-1){
-              const q = dots[idx(i+1,j)];
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
-              ctx.lineTo(q.x, q.y);
-              ctx.stroke();
-            }
-            // bottom neighbor
-            if(j < rows-1){
-              const q = dots[idx(i,j+1)];
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
-              ctx.lineTo(q.x, q.y);
-              ctx.stroke();
-            }
+          if(i < cols-1){
+            const b = nodes[idx+1];
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+          if(j < rows-1){
+            const b = nodes[idx+cols];
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
           }
         }
       }
     }
+
+    // Text distortion (after mesh physics so it follows the same feel)
+    distortLetters();
 
     requestAnimationFrame(step);
   }
@@ -278,30 +350,28 @@
   // Input
   window.addEventListener('mousemove', (e)=>{
     cursor.tx = e.clientX; cursor.ty = e.clientY;
-    activity = Math.min(1, activity + 0.15); // snappy fade-in
+    activity = Math.min(1, activity + 0.12); // snappy but not harsh
   }, {passive:true});
   window.addEventListener('mouseleave', ()=>{
-    cursor.tx = cursor.ty = null; // slow fade-out will take over
+    cursor.tx = cursor.ty = null; // graceful fade out
   }, {passive:true});
 
   window.addEventListener('resize', resize);
   resize();
   requestAnimationFrame(step);
-})();
-</script>
 
-<script>
-/* Keep the orb centered under the wordmark */
-(function(){
-  const orb=document.getElementById('orb'), title=document.getElementById('title'), hero=document.getElementById('home');
-  function center(){
-    if(!orb||!title||!hero) return;
-    const r=title.getBoundingClientRect(), h=hero.getBoundingClientRect();
-    orb.style.left = (r.left + r.width/2 - h.left) + 'px';
-    orb.style.top  = (r.top  + r.height/2 - h.top ) + 'px';
-  }
-  window.addEventListener('load', center);
-  window.addEventListener('resize', () => requestAnimationFrame(center));
+  // Keep orb centered under the wordmark
+  (function keepOrb(){
+    const orb=document.getElementById('orb'), title=document.getElementById('title'), hero=document.getElementById('home');
+    function center(){
+      if(!orb||!title||!hero) return;
+      const r=title.getBoundingClientRect(), h=hero.getBoundingClientRect();
+      orb.style.left = (r.left + r.width/2 - h.left) + 'px';
+      orb.style.top  = (r.top  + r.height/2 - h.top ) + 'px';
+    }
+    window.addEventListener('load', center);
+    window.addEventListener('resize', () => requestAnimationFrame(center));
+  })();
 })();
 </script>
 </body>
