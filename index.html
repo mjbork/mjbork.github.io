@@ -7,8 +7,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
   <style>
     :root{
-      --bg:#fcfbf8;      /* off-white */
-      --fg:#111111;      /* text */
+      --bg:#fcfbf8;  /* off-white */
+      --fg:#111111;  /* text */
       --muted:#666666;
     }
     *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
@@ -35,21 +35,6 @@
       display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;
       padding:0 2rem;
     }
-    /* Gentle orb behind the wordmark */
-    .orb{
-      position:absolute; z-index:1;
-      left:50%; top:50%; translate:-50% -50%;
-      width:min(60vw, 660px); aspect-ratio:1/1; border-radius:50%;
-      background:
-        radial-gradient(closest-side,
-          rgba(0,0,0,.06),
-          rgba(0,0,0,.04) 35%,
-          rgba(0,0,0,.02) 65%,
-          rgba(0,0,0,0) 80%);
-      filter:blur(.2px);
-      pointer-events:none;
-    }
-
     .hero h1{
       position:relative; z-index:2;
       font-size:clamp(2.1rem,5vw,3.8rem);
@@ -66,14 +51,28 @@
     }
     .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
 
-    /* Footer */
     footer{ position:fixed; bottom:1.2rem; left:0; right:0; display:flex; justify-content:center; z-index:1; }
     .socials{ display:flex; gap:1.45rem; align-items:center; }
     .socials a{ color:#7a7a7a; display:inline-flex; transition:opacity .2s, transform .2s; }
     .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
     .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
-    /* Micro-dot canvas sits behind content */
+    /* Gentle orb behind the wordmark */
+    .orb{
+      position:absolute; z-index:1;
+      left:50%; top:50%; translate:-50% -50%;
+      width:min(60vw, 660px); aspect-ratio:1/1; border-radius:50%;
+      background:
+        radial-gradient(closest-side,
+          rgba(0,0,0,.06),
+          rgba(0,0,0,.04) 35%,
+          rgba(0,0,0,.02) 65%,
+          rgba(0,0,0,0) 80%);
+      filter:blur(.2px);
+      pointer-events:none;
+    }
+
+    /* Micro-dot canvas */
     .fx-canvas{
       position:fixed; inset:0; z-index:0; pointer-events:none;
     }
@@ -88,6 +87,7 @@
   <!-- Micro-dots field -->
   <canvas id="fx" class="fx-canvas" aria-hidden="true"></canvas>
 
+  <!-- Nav -->
   <nav class="nav" aria-label="Primary">
     <a href="about.html">about</a>
     <a href="campaigns.html">campaigns</a>
@@ -95,10 +95,9 @@
     <a href="contact.html">contact</a>
   </nav>
 
+  <!-- Hero -->
   <section class="hero" id="home">
-    <!-- orb behind the wordmark -->
     <div class="orb" id="orb" aria-hidden="true"></div>
-
     <h1 id="title"><span class="cursive">orjm</span></h1>
     <p class="roles">strategist · ai-driven video · brand consultant</p>
     <a class="btn" href="learn-more.html">learn more</a>
@@ -115,10 +114,10 @@
 
   <script>
     /* =========================================================
-       Micro-dots: HOOK & DRAG
-       - Cursor hooks nearest dot, drags it (leader)
-       - Nearby dots follow with soft springs (smooth tail)
-       - Dots larger, more dispersed, slightly higher alpha
+       MICRO-DOTS: hook & drag + IDLE ORGANIC SHAPES
+       - While moving: hooks nearest dot, nearby dots follow (smooth tail)
+       - When idle: local dots assemble into a random organic silhouette
+         (leaf, bird, face profile, tree canopy) near the cursor
        ========================================================= */
     (function(){
       const canvas = document.getElementById('fx');
@@ -126,26 +125,38 @@
       let dpr = Math.min(window.devicePixelRatio || 1, 2);
       let W, H, dots = [];
 
-      // Visual tuning
-      let gap = 52;                 // more dispersed
-      let baseAlpha = 0.22;         // more visible
-      const color = '191,185,174';  // warm grey
-      const RMIN = 1.1, RMAX = 1.8; // dot radius range (CSS px)
+      /* ---------- Tuning ---------- */
+      let gap = 52;                      // spacing (larger = more dispersed)
+      let baseAlpha = 0.22;              // visibility baseline (0.18–0.28)
+      const color = '191,185,174';       // warm grey RGB
+      const RMIN = 1.1, RMAX = 1.8;      // dot radius range (CSS px)
 
-      // Physics
-      const DAMP   = 0.92;  // viscosity
-      const SPRING = 0.010; // return-to-origin
-      const NOISE  = 0.03;  // tiny wander
-      const FOLLOW_RADIUS = 170; // how far followers feel the leader (px)
-      const FOLLOW_STRENGTH = 0.09; // follower pull strength
-      const LEADER_STRENGTH = 0.35; // force that keeps leader on the cursor (strong)
-      const HOOK_RADIUS = 80; // how close cursor must be to hook a dot (px)
+      // Motion (hook & drag)
+      const DAMP   = 0.93;               // viscosity
+      const SPRING = 0.010;              // return to origin
+      const NOISE  = 0.03;               // tiny wander
+      const FOLLOW_RADIUS   = 190;       // follower influence
+      const FOLLOW_STRENGTH = 0.11;      // follower pull
+      const LEADER_STRENGTH = 0.42;      // leader snaps to cursor
+      const HOOK_RADIUS     = 100;       // proximity to hook
 
-      // Smoothed cursor for buttery motion
+      // Idle → shape assembly
+      const IDLE_MS     = 1200;          // time without movement to trigger
+      const SHAPE_SIZE  = [140, 220];    // px range for shapes (min, max)
+      const SHAPE_PULL  = 0.25;          // spring toward target when assembling
+      const SHAPE_BREATHE = 0.015;       // subtle breathing of shape
+      const ASSEMBLY_RADIUS = 240;       // radius around cursor to recruit dots
+
+      // Smoothed cursor
       const cursor = { tx:-1e9, ty:-1e9, x:-1e9, y:-1e9 };
       const EASE = 0.18;
 
-      let leader = -1; // index of hooked dot
+      // Idle tracking
+      let lastMove = performance.now();
+      let assembling = false;
+      let assigned = []; // list of indices of dots assigned to shape
+      let targets  = []; // [{x,y}] same length as assigned
+      let leader = -1;
 
       function resize(){
         W = canvas.width  = Math.floor(innerWidth  * dpr);
@@ -157,7 +168,7 @@
 
       function buildDots(){
         dots = [];
-        const gx = Math.ceil(innerWidth  / gap) + 2;
+        const gx = Math.ceil(innerWidth / gap) + 2;
         const gy = Math.ceil(innerHeight / gap) + 2;
         for(let j=0;j<gy;j++){
           for(let i=0;i<gx;i++){
@@ -165,11 +176,151 @@
             const oy = (j*gap + 20);
             const x = ox * dpr, y = oy * dpr;
             const r = (RMIN + Math.random()*(RMAX-RMIN)) * dpr;
-            dots.push({ x, y, ox:x, oy:y, vx:0, vy:0, r });
+            dots.push({ x, y, ox:x, oy:y, vx:0, vy:0, r, tx:NaN, ty:NaN });
           }
         }
       }
 
+      /* ---------- Shape generators (normalized to [-1,1]) ---------- */
+      function genLeaf(n){
+        const pts = [];
+        for(let i=0;i<n;i++){
+          const t = i/n * Math.PI*2;
+          const r = 0.75*(1 - 0.55*Math.sin(t)); // cardioid-ish
+          const x = r*Math.cos(t);
+          const y = 1.2*r*Math.sin(t);
+          pts.push([x,y]);
+        }
+        // central vein
+        for(let i=0;i<n*0.3;i++){
+          const s = i/(n*0.3);
+          pts.push([0, (s*2-1)*0.9]);
+        }
+        return pts;
+      }
+      function genBird(n){
+        // soaring bird: two wings (swooshes) + small body
+        const pts = [];
+        for(let i=0;i<n;i++){
+          const u = i/n;
+          const t = (u*2-1);
+          const y = 0.45*Math.sin(Math.PI*u)*(1-0.2*Math.abs(t));
+          const x = t*1.2;
+          pts.push([x,y]);
+          pts.push([x,-y*0.85]);
+        }
+        for(let i=0;i<n*0.2;i++){ // body blob
+          const a = (i/(n*0.2))*Math.PI*2;
+          pts.push([0.0 + 0.18*Math.cos(a), 0.0 + 0.22*Math.sin(a)]);
+        }
+        return pts;
+      }
+      function genFace(n){
+        // simple right-facing profile (forehead→nose→lips→chin→neck)
+        const outline = [
+          [0.1, -0.95],[ -0.2,-0.75],[ -0.28,-0.55],
+          [ -0.18,-0.35],[ 0.05,-0.18], // cheek
+          [ 0.25,-0.1],[ 0.22,-0.02],[ 0.26, 0.04], // lips
+          [ 0.18, 0.22],[ 0.02, 0.38],[ -0.1, 0.55], // nose bridge/forehead
+          [ -0.05, 0.78],[ 0.05,0.94],[ 0.1,0.98]
+        ];
+        // resample to n points
+        const pts = [];
+        for(let i=0;i<n;i++){
+          const t = i/(n-1)*(outline.length-1);
+          const i0 = Math.floor(t), i1 = Math.min(outline.length-1, i0+1);
+          const a = t - i0;
+          const x = outline[i0][0]*(1-a) + outline[i1][0]*a;
+          const y = outline[i0][1]*(1-a) + outline[i1][1]*a;
+          pts.push([x*1.1, y*1.1]);
+        }
+        // head blob to fill
+        for(let i=0;i<n*0.4;i++){
+          const a = (i/(n*0.4))*Math.PI*2;
+          pts.push([-0.05 + 0.45*Math.cos(a), 0.15 + 0.55*Math.sin(a)]);
+        }
+        return pts;
+      }
+      function genTree(n){
+        const pts = [];
+        // canopy blob
+        for(let i=0;i<n;i++){
+          const a = i/n * Math.PI*2;
+          const r = 0.75 + 0.12*Math.sin(3*a) + 0.08*Math.cos(5*a);
+          pts.push([0 + r*Math.cos(a), -0.1 + r*0.75*Math.sin(a)]);
+        }
+        // trunk rectangle
+        for(let i=0;i<n*0.25;i++){
+          const u = i/(n*0.25);
+          pts.push([ -0.15, 0.9*u + 0.2 ]);
+          pts.push([  0.15, 0.9*u + 0.2 ]);
+        }
+        return pts;
+      }
+
+      const SHAPES = [
+        () => genLeaf(140),
+        () => genBird(120),
+        () => genFace(110),
+        () => genTree(120),
+      ];
+
+      function pickShapeWorld(cx,cy){
+        const pts = SHAPES[Math.floor(Math.random()*SHAPES.length)]();
+        // random size, rotation
+        const size = (SHAPE_SIZE[0] + Math.random()*(SHAPE_SIZE[1]-SHAPE_SIZE[0]));
+        const rot = (Math.random()*Math.PI*2);
+        const cs = Math.cos(rot), sn = Math.sin(rot);
+        // transform to world (CSS px), then to canvas (×dpr)
+        return pts.map(([x,y])=>{
+          const X = cx + (x*size*0.5*cs - y*size*0.5*sn);
+          const Y = cy + (x*size*0.5*sn + y*size*0.5*cs);
+          return { x: X*dpr, y: Y*dpr };
+        });
+      }
+
+      function startAssembly(){
+        assembling = true;
+        assigned.length = 0; targets.length = 0;
+        const cx = cursor.x, cy = cursor.y;
+        // recruit local dots
+        const local = [];
+        const R = ASSEMBLY_RADIUS;
+        const R2 = R*R;
+        for(let i=0;i<dots.length;i++){
+          const p = dots[i];
+          const dx = p.x/dpr - cx, dy = p.y/dpr - cy;
+          const d2 = dx*dx + dy*dy;
+          if(d2 < R2) local.push({i, ang: Math.atan2(dy,dx), d: Math.sqrt(d2)});
+        }
+        if(!local.length) return;
+        // sort by angle so mapping is coherent
+        local.sort((a,b)=> a.ang - b.ang);
+        const shapePts = pickShapeWorld(cx, cy);
+        // also sort shape points by angle around center
+        const sp = shapePts.map(pt => {
+          const ang = Math.atan2(pt.y/dpr - cy, pt.x/dpr - cx);
+          return {pt, ang};
+        }).sort((a,b)=>a.ang-b.ang).map(o=>o.pt);
+
+        const k = Math.min(local.length, sp.length);
+        for(let i=0;i<k;i++){
+          const idx = local[i].i;
+          assigned.push(idx);
+          targets.push({ x: sp[i].x, y: sp[i].y, phase: Math.random()*Math.PI*2 });
+          dots[idx].tx = sp[i].x; dots[idx].ty = sp[i].y;
+        }
+      }
+
+      function stopAssembly(){
+        assembling = false;
+        for(const i of assigned){
+          dots[i].tx = NaN; dots[i].ty = NaN;
+        }
+        assigned.length = 0; targets.length = 0;
+      }
+
+      /* ---------- Main loop ---------- */
       let lastT = 0;
       function step(ts){
         if(!lastT) lastT = ts;
@@ -180,11 +331,14 @@
         cursor.x += (cursor.tx - cursor.x) * EASE;
         cursor.y += (cursor.ty - cursor.y) * EASE;
 
-        ctx.clearRect(0,0,W,H);
+        // decide assembly state
+        const idle = (performance.now() - lastMove) > IDLE_MS && isFinite(cursor.tx);
+        if(idle && !assembling) startAssembly();
+        if(!idle && assembling) stopAssembly();
 
-        // choose / update leader (nearest within HOOK_RADIUS)
+        // choose leader each frame (hook)
         if(isFinite(cursor.tx)){
-          let best = -1, bestD2 = (HOOK_RADIUS*HOOK_RADIUS);
+          let best=-1, bestD2 = (HOOK_RADIUS*HOOK_RADIUS);
           for(let i=0;i<dots.length;i++){
             const p = dots[i];
             const dx = p.x/dpr - cursor.x, dy = p.y/dpr - cursor.y;
@@ -192,53 +346,66 @@
             if(d2 < bestD2){ bestD2 = d2; best = i; }
           }
           leader = best;
-        } else {
-          leader = -1;
-        }
+        } else leader = -1;
 
-        // precompute leader data
+        // prefetch leader
         let lx=0, ly=0;
-        if(leader >= 0){
+        if(leader>=0){
           const L = dots[leader];
           lx = L.x; ly = L.y;
-          // pull leader to cursor strongly
           L.vx += (cursor.x*dpr - L.x) * LEADER_STRENGTH;
           L.vy += (cursor.y*dpr - L.y) * LEADER_STRENGTH;
         }
 
+        // clear frame
+        ctx.clearRect(0,0,W,H);
+
+        // animate dots
         for(let i=0;i<dots.length;i++){
           const p = dots[i];
 
-          // spring back to origin (resting texture)
+          // spring toward origin (rest texture)
           p.vx += (p.ox - p.x) * SPRING;
           p.vy += (p.oy - p.y) * SPRING;
 
-          // tiny noise (organic)
-          p.vx += (Math.random()-0.5) * NOISE;
-          p.vy += (Math.random()-0.5) * NOISE;
+          // assembly pull for assigned dots
+          if(assembling && !Number.isNaN(p.tx)){
+            // slight breathing (organic micro-motion)
+            const j = assigned.indexOf(i);
+            const tgt = targets[j];
+            const bx = Math.cos(tgt.phase + performance.now()*0.001)*SHAPE_BREATHE*dpr;
+            const by = Math.sin(tgt.phase + performance.now()*0.0012)*SHAPE_BREATHE*dpr;
+            p.vx += ((tgt.x + bx) - p.x) * SHAPE_PULL;
+            p.vy += ((tgt.y + by) - p.y) * SHAPE_PULL;
+          }
 
-          // followers: get pulled by leader if within radius
-          if(leader >= 0 && i !== leader){
+          // hook followers when moving
+          if(leader>=0 && i!==leader){
             const dx = (lx - p.x), dy = (ly - p.y);
-            const dist = Math.hypot(dx, dy);
+            const dist = Math.hypot(dx,dy);
             if(dist < FOLLOW_RADIUS*dpr){
-              const w = (1 - dist/(FOLLOW_RADIUS*dpr)); // 0..1
-              // pull toward leader
+              const w = (1 - dist/(FOLLOW_RADIUS*dpr));
               p.vx += dx * (FOLLOW_STRENGTH * w);
               p.vy += dy * (FOLLOW_STRENGTH * w);
-              // add slight tangential drift for smooth arc
+              // gentle arc
               p.vx += (-dy) * 0.0006 * w;
               p.vy += ( dx) * 0.0006 * w;
             }
           }
 
-          // integrate with damping
+          // tiny noise
+          p.vx += (Math.random()-0.5)*NOISE;
+          p.vy += (Math.random()-0.5)*NOISE;
+
+          // integrate
           p.vx *= DAMP; p.vy *= DAMP;
           p.x  += p.vx; p.y  += p.vy;
 
-          // draw (slightly brighten when moving)
+          // draw
           const speed = Math.min(1, Math.hypot(p.vx, p.vy) / (1.0*dpr));
-          const a = baseAlpha + speed * 0.18;
+          // increase alpha slightly when assembling so silhouette reads
+          const extra = assembling && !Number.isNaN(p.tx) ? 0.14 : 0.0;
+          const a = baseAlpha + speed*0.18 + extra;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
           ctx.fillStyle = `rgba(${color},${a})`;
@@ -248,9 +415,16 @@
         requestAnimationFrame(step);
       }
 
-      // mouse events (update targets)
-      window.addEventListener('mousemove', (e) => { cursor.tx = e.clientX; cursor.ty = e.clientY; }, {passive:true});
-      window.addEventListener('mouseleave', () => { cursor.tx = cursor.ty = -1e9; }, {passive:true});
+      // mouse
+      window.addEventListener('mousemove', (e)=>{
+        cursor.tx = e.clientX;
+        cursor.ty = e.clientY;
+        lastMove = performance.now();
+      }, {passive:true});
+      window.addEventListener('mouseleave', ()=>{
+        cursor.tx = cursor.ty = -1e9;
+        stopAssembly();
+      }, {passive:true});
 
       // init
       window.addEventListener('resize', resize);
@@ -258,7 +432,7 @@
       requestAnimationFrame(step);
     })();
 
-    // Keep the orb centered beneath the wordmark
+    // keep orb centered beneath the wordmark
     (function(){
       const orb  = document.getElementById('orb');
       const title= document.getElementById('title');
