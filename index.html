@@ -7,9 +7,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
   <style>
     :root{
-      --bg:#fcfbf8;   /* whiter off-white */
-      --fg:#111;      /* text */
-      --muted:#666;
+      --bg:#fcfbf8;      /* off-white */
+      --fg:#111111;      /* text */
+      --muted:#666666;
     }
     *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
     html,body{ height:100%; }
@@ -20,7 +20,7 @@
       overflow-x:hidden;
     }
 
-    /* Top-right nav (unchanged) */
+    /* Top-right nav (kept) */
     .nav{
       position:fixed; top:1.2rem; right:2.4rem; z-index:3;
       display:flex; gap:1.4rem; font-size:.78rem; font-weight:500; letter-spacing:.02em;
@@ -31,69 +31,34 @@
 
     /* Hero */
     .hero{
-      position:relative;       /* needed to layer the orb under the title */
-      z-index:1;
-      min-height:100vh;
+      position:relative; z-index:1; min-height:100vh;
       display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;
       padding:0 2rem;
     }
-
     .hero h1{
-      position:relative; z-index:2;      /* above the orb */
       font-size:clamp(2.1rem,5vw,3.8rem);
       font-weight:500; text-transform:lowercase;
     }
     .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
-
     .roles{ margin-top:.7rem; font-size:.95rem; color:var(--muted); max-width:45rem; text-wrap:balance; }
     .btn{
       margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.85rem;
       border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
-      text-decoration:none; text-transform:lowercase; transition:background .2s,color .2s,transform .2s;
-      display:inline-block;
+      text-decoration:none; text-transform:lowercase; display:inline-block;
+      transition:background .2s,color .2s,transform .2s;
     }
     .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
 
+    /* Footer */
     footer{ position:fixed; bottom:1.2rem; left:0; right:0; display:flex; justify-content:center; z-index:1; }
     .socials{ display:flex; gap:1.45rem; align-items:center; }
     .socials a{ color:#7a7a7a; display:inline-flex; transition:opacity .2s, transform .2s; }
     .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
     .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
-    /* =========================
-       ORB behind the title
-       ========================= */
-    .orb{
-      position:absolute;
-      left:50%; top:50%;              /* default center; JS will re-center to the title */
-      translate:-50% -50%;
-      z-index:1;                      /* under the h1 (which is z-index:2) */
-      width:min(58vw, 640px);
-      aspect-ratio:1/1;
-      border-radius:50%;
-      /* layered soft rings to mimic the look in your screenshot */
-      background:
-        radial-gradient(circle at 50% 50%,
-          rgba(0,0,0,0.05) 0%,
-          rgba(0,0,0,0.035) 28%,
-          rgba(0,0,0,0.02) 55%,
-          rgba(0,0,0,0.0) 75%);
-      filter: blur(0.2px);            /* very slight blur for creaminess */
-      animation: orbZoom 8.5s ease-in-out infinite;
-      will-change: transform, opacity;
-    }
-
-    @keyframes orbZoom{
-      0%   { transform: scale(1);       opacity:1; }
-      40%  { transform: scale(0.06);    opacity:.08; }
-      50%  { transform: scale(0.03);    opacity:0; }   /* microdot & vanish */
-      60%  { transform: scale(0.06);    opacity:.08; } /* return from microdot */
-      100% { transform: scale(1);       opacity:1; }
-    }
-
-    /* motion accessibility */
-    @media (prefers-reduced-motion: reduce){
-      .orb{ animation: none; opacity:.6; }
+    /* Micro-dot canvas sits behind content */
+    .fx-canvas{
+      position:fixed; inset:0; z-index:0; pointer-events:none;
     }
 
     @media(max-width:640px){
@@ -103,6 +68,8 @@
   </style>
 </head>
 <body>
+  <!-- Water-like micro-dots field -->
+  <canvas id="fx" class="fx-canvas" aria-hidden="true"></canvas>
 
   <nav class="nav" aria-label="Primary">
     <a href="about.html">about</a>
@@ -112,10 +79,7 @@
   </nav>
 
   <section class="hero" id="home">
-    <!-- the orb sits *behind* the title -->
-    <div class="orb" id="orb" aria-hidden="true"></div>
-
-    <h1 id="title"><span class="cursive">orjm</span></h1>
+    <h1><span class="cursive">orjm</span></h1>
     <p class="roles">strategist · ai-driven video · brand consultant</p>
     <a class="btn" href="learn-more.html">learn more</a>
   </section>
@@ -130,28 +94,140 @@
   </footer>
 
   <script>
-    // Keep the orb centered *behind* the wordmark, even if layout shifts.
-    const orb = document.getElementById('orb');
-    const title = document.getElementById('title');
+    /* =========================================================
+       Micro-dots “water” field
+       - Faint global dot grid
+       - Cursor injects a smooth velocity field (push + swirl)
+       - Dots drift with viscosity and spring back (like fluid)
+       ========================================================= */
+    (function(){
+      const canvas = document.getElementById('fx');
+      const ctx = canvas.getContext('2d');
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let W, H, dots = [];
+      let gap = 42;         // grid spacing in CSS pixels
+      let baseAlpha = 0.18; // dot opacity at rest (0.12–0.22 is nice)
+      let color = '191,185,174'; // warm grey RGB for a plastic/water feel
 
-    function centerOrb(){
-      const hero = document.getElementById('home');
-      const r = title.getBoundingClientRect();
-      const h = hero.getBoundingClientRect();
+      // Physics params (tune for feel)
+      const SPRING = 0.010;   // return-to-origin
+      const DAMP   = 0.90;    // velocity damping (viscosity)
+      const FORCE  = 0.28;    // how strongly cursor pushes
+      const SWIRL  = 0.22;    // tangential swirl amount
+      const SIGMA  = 140;     // influence radius (px)
+      const NOISE  = 0.08;    // tiny random drift
 
-      // Center of the title relative to the hero container
-      const cx = r.left + r.width/2 - h.left;
-      const cy = r.top  + r.height/2 - h.top;
+      // cursor state (track velocity)
+      const cursor = { x:-1e9, y:-1e9, px:-1e9, py:-1e9, vx:0, vy:0 };
+      let lastT = 0;
 
-      // Position the orb there
-      orb.style.left = cx + 'px';
-      orb.style.top  = cy + 'px';
-      orb.style.translate = '-50% -50%';
-    }
+      function resize(){
+        W = canvas.width  = Math.floor(innerWidth  * dpr);
+        H = canvas.height = Math.floor(innerHeight * dpr);
+        canvas.style.width  = innerWidth + 'px';
+        canvas.style.height = innerHeight + 'px';
+        // rebuild grid
+        buildDots();
+      }
 
-    // Re-center on load and when resizing
-    window.addEventListener('load', centerOrb);
-    window.addEventListener('resize', () => { requestAnimationFrame(centerOrb); });
+      function buildDots(){
+        dots = [];
+        const gx = Math.ceil(innerWidth  / gap) + 2;
+        const gy = Math.ceil(innerHeight / gap) + 2;
+        for(let j=0;j<gy;j++){
+          for(let i=0;i<gx;i++){
+            // staggered grid (hex-ish)
+            const ox = (i*gap + (j%2 ? gap/2 : 0));
+            const oy = (j*gap + 20);
+            const x = ox * dpr, y = oy * dpr;
+            dots.push({
+              x, y, ox:x, oy:y, vx:0, vy:0,
+              r: (Math.random()*0.45 + 0.85) * dpr // micro radius variation
+            });
+          }
+        }
+      }
+
+      function step(ts){
+        if(!lastT) lastT = ts;
+        const dt = Math.min(32, ts - lastT); // clamp for stability
+        lastT = ts;
+
+        ctx.clearRect(0,0,W,H);
+
+        // cursor velocity (for inertial push)
+        if(Number.isFinite(cursor.x)){
+          cursor.vx = ((cursor.x - cursor.px) / Math.max(1, dt));
+          cursor.vy = ((cursor.y - cursor.py) / Math.max(1, dt));
+          cursor.px = cursor.x; cursor.py = cursor.y;
+        }
+
+        const s2 = (SIGMA * dpr) * (SIGMA * dpr); // sigma^2 for Gaussian falloff
+
+        for(const p of dots){
+          // spring back to origin (water wants to rest)
+          const rx = p.ox - p.x, ry = p.oy - p.y;
+          p.vx += rx * SPRING;
+          p.vy += ry * SPRING;
+
+          // cursor force field
+          if(Number.isFinite(cursor.x)){
+            const dx = p.x - cursor.x * dpr;
+            const dy = p.y - cursor.y * dpr;
+            const d2 = dx*dx + dy*dy;
+            const falloff = Math.exp(-d2 / (2 * s2)); // Gaussian
+            // push in direction of cursor motion
+            p.vx += cursor.vx * dpr * FORCE * falloff;
+            p.vy += cursor.vy * dpr * FORCE * falloff;
+            // add swirl (perpendicular)
+            p.vx += (-cursor.vy * dpr) * SWIRL * falloff;
+            p.vy += ( cursor.vx * dpr) * SWIRL * falloff;
+          }
+
+          // tiny noise for organic motion
+          p.vx += (Math.random()-0.5) * NOISE;
+          p.vy += (Math.random()-0.5) * NOISE;
+
+          // viscosity damping + integrate
+          p.vx *= DAMP; p.vy *= DAMP;
+          p.x  += p.vx; p.y  += p.vy;
+
+          // draw
+          // brighten near fast flow: scale alpha by local speed
+          const speed = Math.min(1, Math.hypot(p.vx, p.vy) / (0.9 * dpr));
+          const a = baseAlpha + speed * 0.22;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${color},${a})`;
+          ctx.fill();
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      // Mouse handling
+      window.addEventListener('mousemove', (e) => {
+        cursor.x = e.clientX;
+        cursor.y = e.clientY;
+        if(cursor.px === -1e9){ cursor.px = cursor.x; cursor.py = cursor.y; }
+      }, {passive:true});
+      window.addEventListener('mouseleave', () => {
+        cursor.x = cursor.y = cursor.px = cursor.py = -1e9;
+      });
+
+      // Init
+      window.addEventListener('resize', resize);
+      resize();
+      requestAnimationFrame(step);
+
+      // ===== Quick knobs you can tweak =====
+      // gap    → 36 (denser) … 54 (sparser)
+      // baseAlpha → 0.12 (fainter) … 0.24 (stronger)
+      // FORCE  → how much the cursor pushes (0.20–0.40)
+      // SWIRL  → how much curl around the cursor (0.16–0.32)
+      // SIGMA  → influence radius (120–180)
+      // DAMP   → 0.88 more viscous, 0.93 looser
+    })();
   </script>
 </body>
 </html>
