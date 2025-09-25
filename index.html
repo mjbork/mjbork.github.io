@@ -22,7 +22,7 @@
     position:relative; z-index:1; min-height:100vh;
     display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 2rem;
   }
-  .hero h1{ font-size:clamp(2.6rem,6.2vw,4.6rem); font-weight:500; text-transform:lowercase; margin-bottom:.7rem; }
+  .hero h1{ font-size:clamp(2.6rem,6.2vw,4.6rem); font-weight:500; text-transform:lowercase; margin-bottom:.7rem; text-align:center; }
   .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
 
   .roles{ font-size:.98rem; color:var(--muted); max-width:48rem; text-wrap:balance; }
@@ -44,20 +44,24 @@
 
   #copyGroup{ will-change:transform, filter; display:inline-block; transform-origin:center; }
 
-  /* Typewriter caret */
-  .caret::after{ content:"▌"; margin-left:2px; animation: blink 1s step-end infinite; opacity:.6; }
+  /* Thin caret */
+  .caret::after{
+    content:"\258F";              /* thin bar ▏ */
+    margin-left:2px;
+    animation: blink 1s step-end infinite;
+    opacity:.7;
+    font-weight:300;
+    transform: translateY(0.06em) scaleX(0.9);
+  }
   @keyframes blink{ 50%{ opacity:0; } }
 
-  /* Tiny error overlay if something throws (prevents blank page) */
+  .word { display:inline-block; white-space:pre; }
+  .fade-out{ opacity:0; transition: opacity 500ms ease; }
+
   #errOverlay{
     position:fixed; bottom:.5rem; left:.5rem; max-width:90vw;
     background:#000; color:#fff; font:12px/1.3 monospace;
     padding:.5rem .6rem; border-radius:.4rem; opacity:.9; z-index:9999; display:none; white-space:pre-wrap;
-  }
-
-  @media(max-width:640px){
-    .nav{ right:1rem; gap:1rem; font-size:.72rem; }
-    .roles{ font-size:.9rem; }
   }
 </style>
 </head>
@@ -74,14 +78,12 @@
 
   <section class="hero" id="home">
     <div id="copyGroup" aria-label="title and roles">
-      <!-- HERO TITLE (required structure) -->
+      <!-- HERO TITLE -->
       <h1 class="cursive">
         <span id="typeTarget" aria-live="polite"></span>
       </h1>
-
       <!-- Subtitle -->
       <p class="roles">creative strategist · ai-driven video · brand consultant</p>
-
       <!-- CTA -->
       <a href="learn-more.html" class="btn">learn more</a>
     </div>
@@ -96,278 +98,81 @@
     </div>
   </footer>
 
-<!-- ================== ERROR OVERLAY (prevents blank page) ================== -->
-<script>
-(function(){
-  const box = document.getElementById('errOverlay');
-  const show = (msg)=>{ if(!box) return; box.style.display='block'; box.textContent = msg; };
-  window.addEventListener('error', e=> show('JS error: ' + e.message));
-  window.addEventListener('unhandledrejection', e=> show('Promise error: ' + (e.reason && e.reason.message || e.reason)));
-})();
-</script>
-
-<!-- ================== CHAIN-LINK MESH (visible on move, smooth idle fade) ================== -->
-<script>
-(function(){
-  const canvas = document.getElementById('fx');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if(!ctx) return;
-
-  /* Tuned for slower fade + more visible mesh */
-  const DOT_RGB = '120,120,120';
-  const GAP = 44;
-  const DOT_R = 0.9;
-  const DOT_ALPHA = 0.35;   // more visible
-  const LINK_ALPHA = 0.18;  // more visible
-
-  const INFLUENCE_R = 190;
-  const SPRING = 0.008;
-  const DAMP = 0.976;
-  const NOISE = 0.003;
-
-  let activity = 0;
-  const MOVE_BOOST = 0.16;
-  const SPEED_GAIN = 0.55;
-  const DECAY_MOVING = 0.005;  // slower fade
-  const DECAY_IDLE   = 0.007;  // slower idle fade
-  const DEAD_EPS = 0.045;
-
-  let isMoving = false;
-  let idleTimer = 0;
-  const IDLE_AFTER_MS = 90;
-
-  let dpr = Math.min(window.devicePixelRatio || 1, 2);
-  let W=0, H=0, cols=0, rows=0;
-  let nodes=[];
-
-  const cursor = { tx:null, ty:null, x:0, y:0, px:0, py:0, vx:0, vy:0 };
-  const EASE = 0.13;
-
-  const copyGroup = document.getElementById('copyGroup');
-  const G = { x:0, y:0, skew:0, blur:0, vx:0, vy:0, vsk:0, vb:0 };
-
-  function resize(){
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = canvas.width = Math.max(1, Math.floor(window.innerWidth * dpr));
-    H = canvas.height = Math.max(1, Math.floor(window.innerHeight * dpr));
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-
-    nodes = [];
-    cols = Math.ceil(window.innerWidth / GAP) + 2;
-    rows = Math.ceil(window.innerHeight / GAP) + 2;
-
-    for(let j=0;j<rows;j++){
-      for(let i=0;i<cols;i++){
-        const x = (i*GAP + (j%2? GAP/2 : 0)) * dpr;
-        const y = (j*GAP + 20) * dpr;
-        nodes.push({ x, y, ox:x, oy:y, vx:0, vy:0 });
-      }
-    }
-  }
-
-  function updateCopy(dt){
-    if(!copyGroup) return;
-    const r = copyGroup.getBoundingClientRect();
-    const cx = cursor.x, cy = cursor.y;
-    let tx = 0, ty = 0, tskew = 0, tblur = 0;
-    if(isMoving){
-      const ex = r.left + r.width/2;
-      const ey = r.top  + r.height/2;
-      const dx = ex - cx, dy = ey - cy;
-      const R = 260;
-      const d2 = dx*dx + dy*dy;
-      if(d2 < R*R){
-        const fall = Math.exp(-d2/(2*R*R));
-        const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
-        const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
-        const len = Math.max(1e-6, Math.hypot(dx,dy));
-        const rx = dx/len, ry = dy/len;
-        const maxShift = 10;
-        tx = (rx*0.7 + ux*0.3) * maxShift * fall * activity;
-        ty = (ry*0.7 + uy*0.3) * maxShift * fall * activity;
-        tskew = (ux*ry - uy*rx) * 3.0 * fall * activity;
-        tblur = Math.min(0.9, 0.7 * fall * activity);
-      }
-    }
-    // critically damped spring
-    const zeta=1, omega=8, k=omega*omega, c=2*zeta*omega;
-    function spring(p,v,target){ const a = -k*(p-target) - c*v; v += a*dt; p += v*dt; return [p,v]; }
-    [G.x, G.vx]   = spring(G.x, G.vx, tx);
-    [G.y, G.vy]   = spring(G.y, G.vy, ty);
-    [G.skew,G.vsk]= spring(G.skew,G.vsk, tskew);
-    [G.blur,G.vb] = spring(G.blur,G.vb, tblur);
-
-    copyGroup.style.transform = `translate3d(${G.x}px, ${G.y}px, 0) skew(${G.skew}deg,0)`;
-    copyGroup.style.filter = (isMoving && activity>DEAD_EPS && G.blur>0.02) ? `blur(${G.blur}px)` : 'none';
-  }
-
-  function frame(ts){
-    try{
-      if(!frame.t0) frame.t0 = ts;
-      const dt = Math.min(0.033, Math.max(0.001, (ts - frame.t0)/1000));
-      frame.t0 = ts;
-
-      if(cursor.tx != null){
-        if(cursor.x === 0 && cursor.y === 0){ cursor.x = cursor.tx; cursor.y = cursor.ty; cursor.px=cursor.x; cursor.py=cursor.y; }
-        cursor.x += (cursor.tx - cursor.x) * EASE;
-        cursor.y += (cursor.ty - cursor.y) * EASE;
-        cursor.vx = cursor.x - cursor.px;
-        cursor.vy = cursor.y - cursor.py;
-        const vmag = Math.hypot(cursor.vx, cursor.vy);
-        activity = Math.min(1, activity + MOVE_BOOST + SPEED_GAIN * Math.min(1, vmag/28));
-        cursor.px = cursor.x; cursor.py = cursor.y;
-      }
-
-      activity = Math.max(0, activity - (isMoving ? DECAY_MOVING : DECAY_IDLE));
-
-      ctx.clearRect(0,0,W,H);
-
-      if(!isMoving || activity <= DEAD_EPS){
-        updateCopy(dt);
-        requestAnimationFrame(frame);
-        return;
-      }
-
-      const gate = Math.pow(activity, 1.1);
-      const infl2 = (INFLUENCE_R*INFLUENCE_R);
-      const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
-      const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
-
-      ctx.lineWidth = (dpr>1?0.8:1);
-      ctx.strokeStyle = `rgba(${DOT_RGB},${LINK_ALPHA*gate})`;
-      const colsMinus1 = cols - 1, rowsMinus1 = rows - 1;
-
-      for(let j=0;j<rows;j++){
-        for(let i=0;i<cols;i++){
-          const idx = j*cols + i;
-          const n = nodes[idx];
-
-          n.vx += (n.ox - n.x) * SPRING;
-          n.vy += (n.oy - n.y) * SPRING;
-
-          const dx = (n.x/dpr - cursor.x);
-          const dy = (n.y/dpr - cursor.y);
-          const d2 = dx*dx + dy*dy;
-          if(d2 < infl2){
-            const fall = Math.exp(-d2/(2*infl2));
-            const len = Math.max(1e-6, Math.hypot(dx,dy));
-            const rx = dx/len, ry = dy/len;
-            const tangx = -uy, tangy = ux;
-            const push = 0.32 * fall * dpr;
-            n.vx += (rx*0.6 + tangx*0.1 + ux*0.16) * push;
-            n.vy += (ry*0.6 + tangy*0.1 + uy*0.16) * push;
-          }
-
-          n.vx += (Math.random()-0.5)*NOISE;
-          n.vy += (Math.random()-0.5)*NOISE;
-
-          n.vx *= DAMP; n.vy *= DAMP;
-          n.x += n.vx;  n.y += n.vy;
-
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, DOT_R*dpr, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(${DOT_RGB},${DOT_ALPHA*gate})`;
-          ctx.fill();
-
-          if(i < colsMinus1){
-            const b = nodes[idx+1];
-            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-          }
-          if(j < rowsMinus1){
-            const b = nodes[idx+cols];
-            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-          }
-        }
-      }
-
-      updateCopy(dt);
-      requestAnimationFrame(frame);
-    }catch(e){
-      const box = document.getElementById('errOverlay');
-      if(box){ box.style.display='block'; box.textContent = 'Loop error: ' + e.message; }
-      requestAnimationFrame(frame);
-    }
-  }
-
-  function onMove(e){
-    cursor.tx = e.clientX; cursor.ty = e.clientY;
-    isMoving = true;
-    if(idleTimer) clearTimeout(idleTimer);
-    idleTimer = setTimeout(()=>{ isMoving = false; }, IDLE_AFTER_MS);
-    activity = Math.min(1, activity + 0.14);
-  }
-  window.addEventListener('pointermove', onMove, {passive:true});
-  window.addEventListener('mousemove', onMove, {passive:true}); // fallback
-  window.addEventListener('pointerleave', ()=>{ cursor.tx = cursor.ty = null; isMoving = false; }, {passive:true});
-
-  window.addEventListener('resize', resize);
-  resize();
-  requestAnimationFrame(frame);
-})();
-</script>
-
-<!-- ================== TYPEWRITER (random order, ends typing "ORJM") ================== -->
+<!-- ================== TYPEWRITER ================== -->
 <script>
 (function(){
   const target = document.getElementById('typeTarget');
   if(!target) return;
 
-  const phrases = ["Signal", "Originality", "Alchemy", "Continuum", "Resonance", "Vision"];
-
-  // Shuffle once per load (Fisher–Yates)
-  for (let i = phrases.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [phrases[i], phrases[j]] = [phrases[j], phrases[i]];
-  }
-
-  const TYPE_MS  = 58;   // typing speed
-  const HOLD_MS  = 700;  // pause after word...
-  const CLEAR_MS = 34;   // deletion speed
+  const PHRASES = ["Vision", "Originality", "Resonance"];
+  const TYPE_MS = 120;     // slow typing speed
+  const HOLD_MS = 450;     // hold each finished word
+  const GAP_MS  = 180;     // pause before next word
+  const FINAL_TYPES = true;
 
   target.classList.add('caret');
 
-  function typeText(text, withEllipsis, holdMs, done){
-    target.textContent = "";
-    let i = 0;
-    const full = withEllipsis ? (text + "...") : text;
-    const id = setInterval(()=>{
-      target.textContent = full.slice(0, i++);
-      if (i > full.length) {
-        clearInterval(id);
-        if (holdMs && holdMs > 0) setTimeout(()=> done && done(), holdMs);
-        else done && done();
-      }
-    }, TYPE_MS);
+  function typeWordInline(word){
+    return new Promise(resolve=>{
+      const needsSpace = target.textContent.length > 0;
+      const span = document.createElement('span');
+      span.className = 'word';
+      span.textContent = needsSpace ? ' ' : '';
+      target.appendChild(span);
+
+      const full = (needsSpace ? ' ' : '') + word + "...";
+      let i = 0;
+      const id = setInterval(()=>{
+        span.textContent = full.slice(0, ++i);
+        if(i >= full.length){
+          clearInterval(id);
+          setTimeout(resolve, HOLD_MS);
+        }
+      }, TYPE_MS);
+    });
   }
 
-  function clearText(done){
-    const current = target.textContent;
-    let i = current.length;
-    const id = setInterval(()=>{
-      i--;
-      target.textContent = current.slice(0, i);
-      if (i <= 0) { clearInterval(id); done && done(); }
-    }, CLEAR_MS);
+  function fadeOutAll(){
+    return new Promise(resolve=>{
+      target.classList.remove('caret');
+      const kids = Array.from(target.querySelectorAll('.word'));
+      kids.forEach(k => k.classList.add('fade-out'));
+      setTimeout(()=>{
+        target.textContent = '';
+        resolve();
+      }, 520);
+    });
   }
 
-  function runSequence(list){
-    let idx = 0;
-    function next(){
-      if (idx >= list.length) {
-        // Final: type ORJM (no ellipsis) and settle
-        typeText("ORJM", false, 0, ()=>{ target.classList.remove('caret'); });
-        return;
-      }
-      typeText(list[idx], true, HOLD_MS, ()=>{
-        clearText(()=>{ idx++; next(); });
-      });
+  function typeFinalORJM(){
+    return new Promise(resolve=>{
+      target.classList.add('caret');
+      const span = document.createElement('span');
+      span.className = 'word';
+      target.appendChild(span);
+      const text = 'ORJM';
+      let i = 0;
+      const id = setInterval(()=>{
+        span.textContent = text.slice(0, ++i);
+        if(i >= text.length){
+          clearInterval(id);
+          target.classList.remove('caret');
+          resolve();
+        }
+      }, TYPE_MS);
+    });
+  }
+
+  async function run(){
+    for (let i=0; i<PHRASES.length; i++){
+      await typeWordInline(PHRASES[i]);
+      await new Promise(r=> setTimeout(r, GAP_MS));
     }
-    next();
+    await fadeOutAll();
+    if(FINAL_TYPES) await typeFinalORJM();
   }
 
-  setTimeout(()=> runSequence(phrases), 120);
+  setTimeout(run, 200);
 })();
 </script>
 </body>
