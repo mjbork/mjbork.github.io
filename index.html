@@ -32,8 +32,7 @@
   .btn{
     margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.9rem;
     border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
-    text-decoration:none; text-transform:lowercase; display:inline-block;
-    transition:background .2s,color .2s,transform .2s, letter-spacing .15s ease, filter .15s ease;
+    text-decoration:none; text-transform:lowercase; display:inline-block; transition:background .2s,color .2s,transform .2s;
   }
   .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
 
@@ -44,7 +43,7 @@
   .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
   .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
-  /* Gentle orb under title (optional) */
+  /* Soft orb */
   .orb{
     position:absolute; z-index:1; left:50%; top:50%; translate:-50% -50%;
     width:min(60vw,660px); aspect-ratio:1/1; border-radius:50%;
@@ -57,7 +56,6 @@
 
   /* Per-letter distortion hooks */
   #title .ch{ display:inline-block; will-change:transform, filter; }
-  #learn .ch{ display:inline-block; will-change:transform, filter; }
 
   @media(max-width:640px){
     .nav{ right:1rem; gap:1rem; font-size:.72rem; }
@@ -85,11 +83,8 @@
 
     <p class="roles">strategist · ai-driven video · brand consultant</p>
 
-    <!-- Button letters split too -->
-    <a id="learn" class="btn" href="learn-more.html" aria-label="learn more">
-      <span class="ch">l</span><span class="ch">e</span><span class="ch">a</span><span class="ch">r</span><span class="ch">n</span>&nbsp;
-      <span class="ch">m</span><span class="ch">o</span><span class="ch">r</span><span class="ch">e</span>
-    </a>
+    <!-- Leave "learn more" UNDISTORTED now -->
+    <a id="learn" class="btn" href="learn-more.html" aria-label="learn more">learn more</a>
   </section>
 
   <footer>
@@ -103,38 +98,38 @@
 
 <script>
 /* =========================================================
-   RED CHAIN-LINK made of CLUSTERS (mini-dots)
-   - Each grid node is a tight cluster of micro-dots
-   - Cursor displaces like touching chain-link
-   - Smooth fade-out when idle
-   - Title and "learn more" subtly distort near the cursor
+   CHAIN-LINK made of CLUSTERS (mini-dots) — GRAY
+   - Smooth fade-out at rest
+   - "orjm" distorts smoothly (per-letter easing)
+   - "learn more" stays stable (no distortion)
 ========================================================= */
 (function(){
   const canvas = document.getElementById('fx');
   const ctx = canvas.getContext('2d');
   if(!ctx) return;
 
-  /* ---------- Visual ---------- */
-  const DOT_RGB   = '200,40,40';  // red
-  const GAP       = 46;           // grid spacing (denser mesh if smaller)
-  const CLUSTER_N = 8;            // micro-dots per node (6–12 looks good)
-  const CLUSTER_R = 5;            // cluster radius in CSS px (tight bunch)
-  const MICRO_R   = [0.35, 0.9];  // micro-dot radius range (CSS px)
-  const DOT_ALPHA = 0.22;         // micro-dot base alpha (scaled by activity)
-  const DRAW_LINKS= true;         // faint connections near the cursor
-  const LINK_ALPHA_BASE = 0.08;
-  const LINK_RADIUS = 210;        // px around cursor to draw links
+  /* ---------- Visual (gray mesh) ---------- */
+  const DOT_RGB   = '150,150,150';   // subtle gray
+  const GAP       = 46;              // grid spacing
+  const CLUSTER_N = 8;               // micro-dots per node
+  const CLUSTER_R = 5;               // cluster radius (CSS px)
+  const MICRO_R   = [0.35, 0.9];     // micro-dot radius (CSS px)
+  const DOT_ALPHA = 0.18;            // base opacity (scaled by activity)
 
-  /* ---------- Physics (silky) ---------- */
-  const DAMP   = 0.972;  // smoother settle
+  const DRAW_LINKS      = true;      // faint connections near cursor
+  const LINK_ALPHA_BASE = 0.06;
+  const LINK_RADIUS     = 210;       // px
+
+  /* ---------- Physics ---------- */
+  const DAMP   = 0.974;  // smoother settle
   const SPRING = 0.008;  // soft return to origin
   const NOISE  = 0.006;  // tiny shimmer
 
-  // Cursor influence
-  const INFL_R    = 190;  // influence radius (px)
-  const PUSH      = 0.32; // displacement strength from motion
-  const RADIAL    = 0.6;  // radial push away from cursor
-  const TANGENTIAL= 0.12; // slight curl
+  // Cursor influence (chain-link push)
+  const INFL_R    = 190;  // px
+  const PUSH      = 0.30; // strength
+  const RADIAL    = 0.60; // radial away
+  const TANGENTIAL= 0.10; // slight curl
   const ALONG     = 0.16; // tug along motion
 
   /* ---------- Visibility (smooth fade) ---------- */
@@ -146,16 +141,14 @@
   /* ---------- State ---------- */
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
   let W=0, H=0, cols=0, rows=0;
-  const nodes = []; // [{x,y,ox,oy,vx,vy,cluster:[{ox,oy,r}]}]
+  const nodes = [];
 
   const cursor = { tx:null, ty:null, x:null, y:null, px:0, py:0, vx:0, vy:0 };
   const EASE = 0.14;
 
-  // Distortion targets (letters)
-  const title = document.getElementById('title');
-  const learn = document.getElementById('learn');
-  const titleLetters = Array.from(title.querySelectorAll('.ch'));
-  const learnLetters = Array.from(learn.querySelectorAll('.ch'));
+  // Distortion target: title only (smooth per-letter easing)
+  const titleLetters = Array.from(document.querySelectorAll('#title .ch'));
+  const letterState = titleLetters.map(() => ({ x:0, y:0, bx:0, by:0 })); // current & target offsets
 
   function resize(){
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -174,7 +167,6 @@
         const oy_css = j*GAP + 20;
         const x = ox_css * dpr, y = oy_css * dpr;
 
-        // build cluster blueprint (in CSS px, relative to node center)
         const cluster = [];
         for(let k=0;k<CLUSTER_N;k++){
           const a = (k/CLUSTER_N)*Math.PI*2 + Math.random()*0.6;
@@ -191,18 +183,20 @@
     }
   }
 
-  function distortLetters(){
-    if(cursor.x == null) {
-      [...titleLetters, ...learnLetters].forEach(el => { el.style.transform='translate3d(0,0,0)'; el.style.filter='none'; });
-      learn.style.letterSpacing = '';
-      return;
-    }
+  function distortTitle(){
+    // set target offsets (bx/by) based on cursor proximity, then ease x/y toward bx/by
     const cx = cursor.x, cy = cursor.y;
+    const maxShiftPx = 9;     // softer than before
+    const radiusPx   = 220;
+    const r2 = radiusPx*radiusPx;
 
-    // Helper to apply distortion to a set of letters
-    function apply(letters, maxShiftPx, radiusPx){
-      const r2 = radiusPx*radiusPx;
-      for(const el of letters){
+    for(let idx=0; idx<titleLetters.length; idx++){
+      const el = titleLetters[idx];
+      const st = letterState[idx];
+
+      if(cx == null){
+        st.bx = 0; st.by = 0;
+      }else{
         const b = el.getBoundingClientRect();
         const ex = (b.left + b.width/2);
         const ey = (b.top  + b.height/2);
@@ -210,41 +204,34 @@
         const dy = ey - cy;
         const d2 = dx*dx + dy*dy;
         if(d2 > r2){
-          el.style.transform = 'translate3d(0,0,0)';
-          el.style.filter = 'none';
-          continue;
+          st.bx = 0; st.by = 0;
+        }else{
+          const fall = Math.exp(-d2/(2*r2));
+          const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
+          const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
+          const rlen = Math.max(1e-6, Math.hypot(dx,dy));
+          const rx = dx/rlen, ry = dy/rlen;
+
+          // target shift: mostly radial, slightly along motion
+          st.bx = (rx*0.72 + ux*0.28) * maxShiftPx * fall * activity;
+          st.by = (ry*0.72 + uy*0.28) * maxShiftPx * fall * activity;
         }
-        const fall = Math.exp(-d2/(2*r2));
-        const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
-        const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
-        const tx = -uy, ty = ux;
-
-        // shift = radial away + a bit along motion
-        const rlen = Math.max(1e-6, Math.hypot(dx,dy));
-        const rx = dx/rlen, ry = dy/rlen;
-        const sx = (rx*0.7 + ux*0.3) * maxShiftPx * fall * activity;
-        const sy = (ry*0.7 + uy*0.3) * maxShiftPx * fall * activity;
-
-        el.style.transform = `translate3d(${sx}px, ${sy}px, 0)`;
-        // slight blur/contrast to feel like “pressed under mesh”
-        const blur = Math.min(1.2, 0.8 * fall * activity);
-        el.style.filter = blur > 0.02 ? `blur(${blur}px) contrast(${1 + 0.12*fall})` : 'none';
       }
+
+      // smooth easing toward target (very soft)
+      const ease = 0.14;
+      st.x += (st.bx - st.x) * ease;
+      st.y += (st.by - st.y) * ease;
+
+      // apply transform + a tiny blur tied to magnitude
+      const mag = Math.min(1, Math.hypot(st.x, st.y) / 12);
+      el.style.transform = `translate3d(${st.x}px, ${st.y}px, 0)`;
+      el.style.filter = mag > 0.02 ? `blur(${0.6*mag}px) contrast(${1 + 0.08*mag})` : 'none';
     }
-
-    apply(titleLetters, 10, 220); // max 10px shift within ~220px
-    apply(learnLetters, 6, 180);  // gentler on button
-
-    // subtle letter-spacing change based on local pressure
-    const learnRect = learn.getBoundingClientRect();
-    const dx = (learnRect.left + learnRect.width/2) - cx;
-    const dy = (learnRect.top  + learnRect.height/2) - cy;
-    const fall = Math.exp(-(dx*dx+dy*dy)/(2*180*180));
-    learn.style.letterSpacing = (fall>0.02) ? `${0.5*fall*activity}px` : '';
   }
 
   function step(){
-    // Smooth cursor + velocity (CSS px)
+    // Smooth cursor + velocity
     if(cursor.tx != null){
       if(cursor.x == null){ cursor.x = cursor.tx; cursor.y = cursor.ty; cursor.px = cursor.x; cursor.py = cursor.y; }
       cursor.x += (cursor.tx - cursor.x) * EASE;
@@ -260,7 +247,7 @@
     ctx.clearRect(0,0,W,H);
 
     // Precompute
-    const gate = Math.pow(activity, 1.15); // smooth fade
+    const gate = Math.pow(activity, 1.2); // smooth fade
     const infl2 = INFL_R*INFL_R;
     const link2 = LINK_RADIUS*LINK_RADIUS;
 
@@ -298,10 +285,9 @@
       n.x  += n.vx; n.y  += n.vy;
     }
 
-    // Draw clusters
+    // Draw clusters (mini-dots)
     if(gate > 0.002){
       for(let n of nodes){
-        // micro-dots
         for(let m of n.cluster){
           const px = n.x + m.ox*dpr;
           const py = n.y + m.oy*dpr;
@@ -314,7 +300,7 @@
       }
     }
 
-    // Optional faint links near cursor (sells the “mesh”)
+    // Optional faint links near cursor (to sell mesh)
     if(DRAW_LINKS && gate > 0.002 && cursor.x != null){
       ctx.lineWidth = (dpr>1?0.75:1);
       for(let j=0;j<rows;j++){
@@ -341,8 +327,8 @@
       }
     }
 
-    // Text distortion (after mesh physics so it follows the same feel)
-    distortLetters();
+    // Smooth title distortion (only ORJM)
+    distortTitle();
 
     requestAnimationFrame(step);
   }
@@ -350,12 +336,13 @@
   // Input
   window.addEventListener('mousemove', (e)=>{
     cursor.tx = e.clientX; cursor.ty = e.clientY;
-    activity = Math.min(1, activity + 0.12); // snappy but not harsh
+    activity = Math.min(1, activity + 0.12); // snappy fade-in
   }, {passive:true});
   window.addEventListener('mouseleave', ()=>{
     cursor.tx = cursor.ty = null; // graceful fade out
   }, {passive:true});
 
+  // Init
   window.addEventListener('resize', resize);
   resize();
   requestAnimationFrame(step);
