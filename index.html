@@ -22,8 +22,22 @@
     position:relative; z-index:1; min-height:100vh;
     display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 2rem;
   }
-  .hero h1{ font-size:clamp(2.6rem,6.2vw,4.6rem); font-weight:500; text-transform:lowercase; margin-bottom:.7rem; text-align:center; }
+
+  /* Base hero heading styling */
+  .hero h1{
+    margin-bottom:.7rem;
+    text-align:center;
+    text-transform:lowercase;
+    line-height:1.1;
+    min-height:1.2em; /* prevents layout jump */
+  }
   .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
+
+  /* Smaller font for the first three words */
+  #typeTarget.small-words { font-size: clamp(1.6rem, 4.5vw, 3rem); }
+
+  /* Larger font for ORJM */
+  #typeTarget.final-word { font-size: clamp(2.6rem, 6.2vw, 4.6rem); font-weight:600; }
 
   .roles{ font-size:.98rem; color:var(--muted); max-width:48rem; text-wrap:balance; }
 
@@ -40,35 +54,26 @@
   .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
   .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
-  .fx-canvas{ position:fixed; inset:0; z-index:0; pointer-events:none; }
-
-  #copyGroup{ will-change:transform, filter; display:inline-block; transform-origin:center; }
-
-  /* Thin caret */
+  /* Thin upright caret */
   .caret::after{
-    content:"\258F";              /* thin bar ▏ */
-    margin-left:2px;
-    animation: blink 1s step-end infinite;
-    opacity:.7;
-    font-weight:300;
-    transform: translateY(0.06em) scaleX(0.9);
+    content: "";
+    display:inline-block;
+    width:1px;
+    height:0.9em;
+    background:currentColor;
+    margin-left:3px;
+    vertical-align:-0.08em;
+    animation: blink 1s steps(1,end) infinite;
+    font-style:normal !important;
+    transform:none !important;
   }
-  @keyframes blink{ 50%{ opacity:0; } }
+  @keyframes blink { 50% { opacity:0; } }
 
-  .word { display:inline-block; white-space:pre; }
+  .word{ display:inline-block; white-space:pre; }
   .fade-out{ opacity:0; transition: opacity 500ms ease; }
-
-  #errOverlay{
-    position:fixed; bottom:.5rem; left:.5rem; max-width:90vw;
-    background:#000; color:#fff; font:12px/1.3 monospace;
-    padding:.5rem .6rem; border-radius:.4rem; opacity:.9; z-index:9999; display:none; white-space:pre-wrap;
-  }
 </style>
 </head>
 <body>
-  <div id="errOverlay"></div>
-  <canvas id="fx" class="fx-canvas" aria-hidden="true"></canvas>
-
   <nav class="nav" aria-label="Primary">
     <a href="about.html">about</a>
     <a href="campaigns.html">campaigns</a>
@@ -105,12 +110,12 @@
   if(!target) return;
 
   const PHRASES = ["Vision", "Originality", "Resonance"];
-  const TYPE_MS = 120;     // slow typing speed
-  const HOLD_MS = 450;     // hold each finished word
-  const GAP_MS  = 180;     // pause before next word
+  const TYPE_MS = 120;
+  const HOLD_MS = 450;
+  const GAP_MS  = 180;
   const FINAL_TYPES = true;
 
-  target.classList.add('caret');
+  target.classList.add('caret','small-words');
 
   function typeWordInline(word){
     return new Promise(resolve=>{
@@ -146,7 +151,8 @@
 
   function typeFinalORJM(){
     return new Promise(resolve=>{
-      target.classList.add('caret');
+      target.classList.remove('small-words');
+      target.classList.add('caret','final-word');
       const span = document.createElement('span');
       span.className = 'word';
       target.appendChild(span);
