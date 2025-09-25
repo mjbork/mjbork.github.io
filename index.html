@@ -7,177 +7,241 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
   <style>
     :root{
-      --bg:#fdfbf7;          /* whiter off-white */
-      --fg:#111;             /* text color */
-      --muted:#666;
-      --mx: 50vw;            /* mouse x (smoothed) */
-      --my: 50vh;            /* mouse y (smoothed) */
-      --intensity: .85;      /* overall strength of “press” */
+      --bg:#fcfbf8;          /* whiter off-white */
+      --fg:#111111;          /* text color */
+      --muted:#666666;
     }
-
     *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
     html,body{ height:100%; }
     body{
-      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      overflow-x: hidden;
+      font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--fg);
+      overflow-x:hidden;
     }
 
-    /* ===== Layout (you can keep your existing nav/hero) ===== */
+    /* ================= Layout ================= */
+    /* Top-right nav (fixed position) */
     .nav{
-      position:absolute; top:1.2rem; right:2.4rem; z-index:3;
-      display:flex; gap:1.4rem; font-size:.82rem; font-weight:500; letter-spacing:.02em;
+      position:fixed;
+      top:1.2rem; right:2.4rem; z-index:3;
+      display:flex; gap:1.4rem;
+      font-size:.78rem; font-weight:500; letter-spacing:.02em;
       text-transform:lowercase;
     }
     .nav a{ color:var(--fg); text-decoration:none; transition:opacity .2s; }
     .nav a:hover{ opacity:.7; }
 
+    /* Hero */
     .hero{
       position:relative; z-index:1; min-height:100vh;
       display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;
       padding:0 2rem;
     }
     .hero h1{
-      font-size:clamp(2.1rem, 6vw, 3.8rem); font-weight:500; text-transform:lowercase;
-      transition: transform .2s ease;
+      font-size:clamp(2.1rem,5vw,3.5rem);
+      font-weight:500; text-transform:lowercase; user-select:none;
+      transition: transform .15s ease, text-shadow .15s ease;
     }
-    .hero .cursive{ font-family:'Playfair Display', serif; font-style:italic; }
-    .roles{ margin-top:.7rem; font-size:.95rem; color:var(--muted); max-width:45rem; text-wrap:balance; }
+    .hero .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
+
+    .roles{
+      margin-top:.7rem; font-size:.9rem; color:var(--muted); max-width:45rem;
+    }
+
     .btn{
-      margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.85rem;
-      border:1px solid var(--fg); border-radius:.34rem; color:var(--fg); text-decoration:none; text-transform:lowercase;
+      margin-top:1.8rem; padding:.7rem 1.8rem; font-size:.82rem;
+      color:var(--fg); background:transparent; border:1px solid var(--fg);
+      border-radius:.34rem; text-decoration:none; text-transform:lowercase;
       transition: background .2s, color .2s, transform .2s;
+      display:inline-block;
     }
     .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
 
-    footer{ position:absolute; bottom:1.2rem; width:100%; display:flex; justify-content:center; z-index:1; }
+    /* Bottom-centered footer */
+    footer{ position:fixed; bottom:1.2rem; left:0; right:0; display:flex; justify-content:center; z-index:1; }
     .socials{ display:flex; gap:1.45rem; align-items:center; }
     .socials a{ color:#7a7a7a; display:inline-flex; transition:opacity .2s, transform .2s; }
     .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
     .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
-    /* ===== Plastic wrap overlay =====
-       We draw soft highlights and shadows that move with the (smoothed) cursor.
-       Layers:
-       - Soft inner highlight (screen blend)
-       - Soft outer shadow ring (multiply)
-       - A faint crease sheen (conic/radial)
-    */
-    .wrap-overlay{
-      position:fixed; inset:0; z-index:2; pointer-events:none;
-      /* Base is transparent; all illusion via gradients */
-      background:
-        /* warm highlight at press center */
-        radial-gradient(120px 120px at var(--mx) var(--my),
-          rgba(255,255,255, calc(.35 * var(--intensity))),
-          rgba(255,255,255,0) 60%) ,
-        /* outer soft shadow ring to simulate indentation */
-        radial-gradient(260px 260px at var(--mx) var(--my),
-          rgba(0,0,0, calc(.08 * var(--intensity))),
-          rgba(0,0,0,0) 70%) ,
-        /* directional sheen (faint) */
-        radial-gradient(180px 180px at calc(var(--mx) + 60px) calc(var(--my) + 50px),
-          rgba(255,255,255, calc(.18 * var(--intensity))),
-          rgba(255,255,255,0) 70%);
-      mix-blend-mode: normal; /* we already control alpha */
-      transition: opacity .25s ease;
-      opacity: 1;
+    /* Micro-dot plastic overlay (canvas sits behind content) */
+    .fx-canvas{
+      position:fixed; inset:0; z-index:0; pointer-events:none;
     }
 
-    /* Tiny parallax to sell the depth: content leans ~1px toward “press” */
-    .parallax{
-      position:relative;
-      will-change: transform;
-      transform: translate3d(0,0,0);
-    }
-
-    /* prefers-reduced-motion: soften the effect */
-    @media (prefers-reduced-motion: reduce){
-      :root{ --intensity: .4; }
-      .wrap-overlay{ transition: none; }
+    @media(max-width:640px){
+      .nav{ right:1rem; gap:1rem; font-size:.72rem; }
+      .roles{ font-size:.82rem; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap-overlay" aria-hidden="true"></div>
+  <!-- Micro-dot plastic field -->
+  <canvas class="fx-canvas" id="fx"></canvas>
 
-  <nav class="nav parallax" id="nav">
+  <!-- Top-right NAV (kept intact) -->
+  <nav class="nav" aria-label="Primary">
     <a href="about.html">about</a>
     <a href="campaigns.html">campaigns</a>
     <a href="reel.html">reel</a>
     <a href="contact.html">contact</a>
   </nav>
 
-  <section class="hero parallax" id="hero">
+  <!-- HERO -->
+  <section class="hero" id="home">
     <h1 id="title"><span class="cursive">orjm</span></h1>
     <p class="roles">strategist · ai-driven video · brand consultant</p>
     <a class="btn" href="learn-more.html">learn more</a>
   </section>
 
-  <footer class="parallax" id="foot">
+  <!-- FOOTER -->
+  <footer>
     <div class="socials">
       <a aria-label="YouTube" href="#"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg></a>
       <a aria-label="Discord" href="#"><svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/></svg></a>
       <a aria-label="X" href="#"><svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg></a>
-      <a aria-label="LinkedIn" href="#"><svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5Zm.06 3.74H1.48v13.7h2.52v-13.7Zm6.85-4.94c-1.57 0-2.53.86-2.96 1.55v-1.34H5v13.7h2.41v-7.83c0-.41.03-.83.15-.1 2.71-1.88 2.67 1.41 2.67 3.48v7.35h2.42v-7.91c0-4.11-2.18-6.04-5.09-6.04z"/></svg></a>
+      <a aria-label="LinkedIn" href="#"><svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5Zm.06 3.74H1.48v13.7h2.52v-13.7Zm6.85-4.94c-1.57 0-2.53.86-2.96 1.55v-1.34H5v13.7h2.41v-7.83c0-.41.03-.83.15-1.12.38-.92 1.25-1.88 2.71-1.88 1.91 0 2.67 1.41 2.67 3.48v7.35h2.42v-7.91c0-4.11-2.18-6.04-5.09-6.04z"/></svg></a>
     </div>
   </footer>
 
   <script>
-    // ===== “Plastic wrap” effect engine =====
-    const overlay = document.querySelector('.wrap-overlay');
-    const layers = document.querySelectorAll('.parallax');
+    /* =========================================================
+       MICRO-DOT "PLASTIC WRAP" FIELD
+       - Microscopic dots: invisible at rest
+       - Only appear around cursor press (soft texture)
+       - Gentle elasticity + randomness
+       ========================================================= */
+    (function(){
+      const canvas = document.getElementById('fx');
+      const ctx = canvas.getContext('2d');
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let W, H;
 
-    // smoothed cursor position (lerp)
-    let tx = innerWidth/2, ty = innerHeight/2;   // target
-    let x = tx, y = ty;                          // smoothed
-    let rafId;
-    const ease = 0.16;                           // softness of the film
-    // tiny parallax strength (content leans toward the press)
-    const parallax = 0.012;                      // lower for subtler
+      // Smoothed cursor (for elastic feel)
+      const cursor = { tx:-1e9, ty:-1e9, x:-1e9, y:-1e9 };
+      let activity = 0; // 0..1, how “pressed” the film is
 
-    function setVars(){
-      // update CSS vars for gradients
-      overlay.style.setProperty('--mx', `${x}px`);
-      overlay.style.setProperty('--my', `${y}px`);
-      // parallax content
-      const dx = (x - innerWidth/2);
-      const dy = (y - innerHeight/2);
-      const txp = dx * parallax;
-      const typ = dy * parallax;
-      layers.forEach(el => {
-        el.style.transform = `translate3d(${txp}px, ${typ}px, 0)`;
+      // ==== TWEAKS ====
+      const CFG = {
+        density: 0.08,      // dots per unit area within the halo (lower = fewer)
+        baseRadius: 110,    // radius of press halo (px)
+        dotMin: 0.35,       // min dot radius
+        dotMax: 0.9,        // max dot radius (keep tiny)
+        alphaNear: 0.35,    // max opacity when near cursor
+        alphaFar: 0.08,     // opacity at edge of halo
+        noise: 0.4,         // small wander per frame
+        ease: 0.16,         // cursor elasticity
+        decay: 0.012        // activity decay per frame
+      };
+
+      // Pre-allocate a small pool for performance (reused each frame)
+      const poolSize = 1400;
+      const dots = new Array(poolSize).fill(0).map(() => ({
+        x: 0, y: 0, r: 0, a: 0, // position, radius, alpha
+        ox: 0, oy: 0            // origin for slight spring-back
+      }));
+
+      function resize(){
+        W = canvas.width = Math.floor(innerWidth * dpr);
+        H = canvas.height = Math.floor(innerHeight * dpr);
+        canvas.style.width = innerWidth + 'px';
+        canvas.style.height = innerHeight + 'px';
+      }
+
+      function lerp(a,b,t){ return a + (b-a)*t; }
+
+      function render(ts){
+        ctx.clearRect(0,0,W,H);
+
+        // Smooth cursor toward target
+        if (cursor.x === -1e9) { cursor.x = cursor.tx; cursor.y = cursor.ty; }
+        cursor.x = lerp(cursor.x, cursor.tx, CFG.ease);
+        cursor.y = lerp(cursor.y, cursor.ty, CFG.ease);
+
+        // Decay activity if idle
+        activity = Math.max(0, activity - CFG.decay);
+
+        // Only draw dots if active enough
+        if (activity > 0.02 && isFinite(cursor.x) && isFinite(cursor.y)) {
+          // Halo size (slightly breathing)
+          const baseR = CFG.baseRadius * (0.9 + Math.sin(ts/1000)*0.02 + Math.cos(ts/700)*0.02);
+          const radius = baseR * dpr;
+
+          // Number of dots proportional to area * density * activity
+          const area = Math.PI * baseR * baseR;
+          const count = Math.min(poolSize, Math.floor(area * CFG.density * (0.4 + activity*0.9)));
+
+          for (let i=0; i<count; i++){
+            const d = dots[i];
+
+            // Poisson-ish sample: random angle & radius with bias toward center
+            const ang = Math.random() * Math.PI * 2;
+            const rr = Math.pow(Math.random(), 0.65) * baseR; // more dots near the center
+            const px = (cursor.x/dpr + Math.cos(ang) * rr);
+            const py = (cursor.y/dpr + Math.sin(ang) * rr);
+
+            // Slight random noise around each dot for texture
+            d.x = (px + (Math.random()-0.5)*CFG.noise) * dpr;
+            d.y = (py + (Math.random)-0.5)*CFG.noise * dpr;
+            d.ox = d.x; d.oy = d.y;
+
+            // Dot size and alpha scale with proximity + activity (micro, never large)
+            const near = 1 - (rr / baseR); // 0..1
+            d.r = (CFG.dotMin + (CFG.dotMax-CFG.dotMin) * (near*0.9 + 0.1)) * dpr;
+            d.a = (CFG.alphaFar + (CFG.alphaNear - CFG.alphaFar) * (near*0.85 + 0.15)) * activity;
+
+            // Draw (use warm grey to mimic plastic texture)
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+            ctx.fillStyle = `rgba(191,185,174,${d.a})`;
+            ctx.fill();
+          }
+
+          // VERY soft highlight + shadow to sell the press (subtle)
+          const hiR = baseR * 0.55;
+          const shR = baseR * 1.25;
+          const mx = cursor.x / dpr, my = cursor.y / dpr;
+
+          // highlight
+          const grdHi = ctx.createRadialGradient(mx*dpr, my*dpr, 0, mx*dpr, my*dpr, hiR*dpr);
+          grdHi.addColorStop(0, `rgba(255,255,255,${0.16 * activity})`);
+          grdHi.addColorStop(1, `rgba(255,255,255,0)`);
+          ctx.fillStyle = grdHi;
+          ctx.beginPath();
+          ctx.arc(mx*dpr, my*dpr, hiR*dpr, 0, Math.PI*2);
+          ctx.fill();
+
+          // shadow ring
+          const grdSh = ctx.createRadialGradient(mx*dpr, my*dpr, hiR*dpr*0.8, mx*dpr, my*dpr, shR*dpr);
+          grdSh.addColorStop(0, `rgba(0,0,0,0)`);
+          grdSh.addColorStop(1, `rgba(0,0,0,${0.10 * activity})`);
+          ctx.fillStyle = grdSh;
+          ctx.beginPath();
+          ctx.arc(mx*dpr, my*dpr, shR*dpr, 0, Math.PI*2);
+          ctx.fill();
+        }
+
+        requestAnimationFrame(render);
+      }
+
+      // Mouse movement → update target + bump activity
+      window.addEventListener('mousemove', (e) => {
+        cursor.tx = e.clientX * dpr;
+        cursor.ty = e.clientY * dpr;
+        // bump activity based on velocity magnitude
+        const v = Math.hypot(e.movementX || 0, e.movementY || 0);
+        activity = Math.min(1, activity + 0.18 + Math.min(1, v/36)*0.55);
+      }, {passive:true});
+
+      window.addEventListener('mouseleave', () => {
+        cursor.tx = -1e9; cursor.ty = -1e9;
       });
-    }
 
-    function loop(){
-      // ease toward target for elastic feel
-      x += (tx - x) * ease;
-      y += (ty - y) * ease;
-      setVars();
-      rafId = requestAnimationFrame(loop);
-    }
-
-    function onMove(e){
-      tx = e.clientX;
-      ty = e.clientY;
-      if(!rafId) loop();
-    }
-
-    function onLeave(){
-      tx = innerWidth/2;
-      ty = innerHeight/2;
-    }
-
-    window.addEventListener('mousemove', onMove, {passive:true});
-    window.addEventListener('mouseleave', onLeave, {passive:true});
-    window.addEventListener('resize', () => {
-      tx = innerWidth/2; ty = innerHeight/2;
-    });
-
-    // Start centered
-    setVars(); loop();
+      window.addEventListener('resize', resize);
+      resize();
+      requestAnimationFrame(render);
+    })();
   </script>
 </body>
 </html>
