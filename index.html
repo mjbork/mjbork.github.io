@@ -41,7 +41,11 @@
       left:50%; top:50%; translate:-50% -50%;
       width:min(60vw, 660px); aspect-ratio:1/1; border-radius:50%;
       background:
-        radial-gradient(closest-side, rgba(0,0,0,.06), rgba(0,0,0,.04) 35%, rgba(0,0,0,.02) 65%, rgba(0,0,0,0) 80%);
+        radial-gradient(closest-side,
+          rgba(0,0,0,.06),
+          rgba(0,0,0,.04) 35%,
+          rgba(0,0,0,.02) 65%,
+          rgba(0,0,0,0) 80%);
       filter:blur(.2px);
       pointer-events:none;
     }
@@ -81,7 +85,7 @@
   </style>
 </head>
 <body>
-  <!-- Water-like micro-dots field -->
+  <!-- Micro-dots field -->
   <canvas id="fx" class="fx-canvas" aria-hidden="true"></canvas>
 
   <nav class="nav" aria-label="Primary">
@@ -92,7 +96,7 @@
   </nav>
 
   <section class="hero" id="home">
-    <!-- gentle orb behind wordmark -->
+    <!-- orb behind the wordmark -->
     <div class="orb" id="orb" aria-hidden="true"></div>
 
     <h1 id="title"><span class="cursive">orjm</span></h1>
@@ -111,39 +115,37 @@
 
   <script>
     /* =========================================================
-       Micro-dots “water with knife & wake”
-       - Global faint dots
-       - Strong split perpendicular to motion near the cursor tip
-       - Wake: drag along the path behind the cursor (short trail)
+       Micro-dots: HOOK & DRAG
+       - Cursor hooks nearest dot, drags it (leader)
+       - Nearby dots follow with soft springs (smooth tail)
+       - Dots larger, more dispersed, slightly higher alpha
        ========================================================= */
     (function(){
       const canvas = document.getElementById('fx');
       const ctx = canvas.getContext('2d');
       let dpr = Math.min(window.devicePixelRatio || 1, 2);
       let W, H, dots = [];
-      let gap = 42;                // grid spacing (px)
-      let baseAlpha = 0.16;        // dot opacity at rest
-      const color = '191,185,174'; // warm grey
 
-      // Physical behavior
-      const SPRING = 0.010;   // return-to-origin
-      const DAMP   = 0.90;    // viscosity
-      const SIGMA  = 150;     // base influence radius (px)
+      // Visual tuning
+      let gap = 52;                 // more dispersed
+      let baseAlpha = 0.22;         // more visible
+      const color = '191,185,174';  // warm grey
+      const RMIN = 1.1, RMAX = 1.8; // dot radius range (CSS px)
 
-      // Knife & wake
-      const KNIFE_WIDTH = 26; // half-thickness of split band (px)
-      const KNIFE_POWER = 1.45; // lateral push strength
-      const SPLIT_RANGE = 80; // longitudinal range around the tip for split (px)
-      const WAKE_LEN    = 240; // how far behind the cursor the wake pulls (px)
-      const WAKE_PULL   = 0.55; // pull strength along motion behind
-      const SWIRL       = 0.18; // gentle curl around the path
+      // Physics
+      const DAMP   = 0.92;  // viscosity
+      const SPRING = 0.010; // return-to-origin
+      const NOISE  = 0.03;  // tiny wander
+      const FOLLOW_RADIUS = 170; // how far followers feel the leader (px)
+      const FOLLOW_STRENGTH = 0.09; // follower pull strength
+      const LEADER_STRENGTH = 0.35; // force that keeps leader on the cursor (strong)
+      const HOOK_RADIUS = 80; // how close cursor must be to hook a dot (px)
 
-      // Cursor trail (for wake)
-      const TRAIL_LEN = 18;
-      const trail = []; // [{x,y,vx,vy} ... newest at 0]
+      // Smoothed cursor for buttery motion
+      const cursor = { tx:-1e9, ty:-1e9, x:-1e9, y:-1e9 };
+      const EASE = 0.18;
 
-      // cursor state in CSS pixels
-      const cursor = { x:-1e9, y:-1e9, px:-1e9, py:-1e9, vx:0, vy:0 };
+      let leader = -1; // index of hooked dot
 
       function resize(){
         W = canvas.width  = Math.floor(innerWidth  * dpr);
@@ -162,10 +164,8 @@
             const ox = (i*gap + (j%2 ? gap/2 : 0));
             const oy = (j*gap + 20);
             const x = ox * dpr, y = oy * dpr;
-            dots.push({
-              x, y, ox:x, oy:y, vx:0, vy:0,
-              r: (Math.random()*0.45 + 0.85) * dpr
-            });
+            const r = (RMIN + Math.random()*(RMAX-RMIN)) * dpr;
+            dots.push({ x, y, ox:x, oy:y, vx:0, vy:0, r });
           }
         }
       }
@@ -173,90 +173,72 @@
       let lastT = 0;
       function step(ts){
         if(!lastT) lastT = ts;
-        const dt = Math.min(32, ts - lastT);
         lastT = ts;
+
+        // smooth cursor
+        if(!isFinite(cursor.x)){ cursor.x = cursor.tx; cursor.y = cursor.ty; }
+        cursor.x += (cursor.tx - cursor.x) * EASE;
+        cursor.y += (cursor.ty - cursor.y) * EASE;
 
         ctx.clearRect(0,0,W,H);
 
-        // update cursor velocity & trail
-        if(Number.isFinite(cursor.x)){
-          cursor.vx = (cursor.x - cursor.px) / Math.max(1, dt);
-          cursor.vy = (cursor.y - cursor.py) / Math.max(1, dt);
-          cursor.px = cursor.x; cursor.py = cursor.y;
-
-          // push new trail point (limit length)
-          trail.unshift({ x: cursor.x, y: cursor.y, vx: cursor.vx, vy: cursor.vy });
-          if(trail.length > TRAIL_LEN) trail.pop();
+        // choose / update leader (nearest within HOOK_RADIUS)
+        if(isFinite(cursor.tx)){
+          let best = -1, bestD2 = (HOOK_RADIUS*HOOK_RADIUS);
+          for(let i=0;i<dots.length;i++){
+            const p = dots[i];
+            const dx = p.x/dpr - cursor.x, dy = p.y/dpr - cursor.y;
+            const d2 = dx*dx + dy*dy;
+            if(d2 < bestD2){ bestD2 = d2; best = i; }
+          }
+          leader = best;
         } else {
-          trail.length = 0;
+          leader = -1;
         }
 
-        // unit direction of motion (for knife/wake)
-        const vmag = Math.hypot(cursor.vx, cursor.vy);
-        const ux = vmag > 0.0001 ? cursor.vx/vmag : 0;
-        const uy = vmag > 0.0001 ? cursor.vy/vmag : 0;
-        // perpendicular (for split)
-        const nx = -uy, ny = ux;
+        // precompute leader data
+        let lx=0, ly=0;
+        if(leader >= 0){
+          const L = dots[leader];
+          lx = L.x; ly = L.y;
+          // pull leader to cursor strongly
+          L.vx += (cursor.x*dpr - L.x) * LEADER_STRENGTH;
+          L.vy += (cursor.y*dpr - L.y) * LEADER_STRENGTH;
+        }
 
-        for(const p of dots){
-          // spring back
-          const rx = p.ox - p.x, ry = p.oy - p.y;
-          p.vx += rx * SPRING; p.vy += ry * SPRING;
+        for(let i=0;i<dots.length;i++){
+          const p = dots[i];
 
-          // base gentle swirl (global)
-          p.vx += (-ry) * 0.00002; // microswirl
-          p.vy += ( rx) * 0.00002;
+          // spring back to origin (resting texture)
+          p.vx += (p.ox - p.x) * SPRING;
+          p.vy += (p.oy - p.y) * SPRING;
 
-          if(trail.length){
-            // --- KNIFE SPLIT near the tip ---
-            const tx = trail[0].x, ty = trail[0].y;
-            const dx = (p.x/dpr - tx), dy = (p.y/dpr - ty); // in CSS px
-            const tLong = dx*ux + dy*uy;         // along motion axis
-            const tLat  = dx*nx + dy*ny;         // signed lateral distance
+          // tiny noise (organic)
+          p.vx += (Math.random()-0.5) * NOISE;
+          p.vy += (Math.random()-0.5) * NOISE;
 
-            if (Math.abs(tLat) < KNIFE_WIDTH && Math.abs(tLong) < SPLIT_RANGE){
-              // push to either side of the blade (sign by tLat)
-              const fall = 1 - Math.abs(tLong)/SPLIT_RANGE;       // 0..1
-              const side = (tLat >= 0 ? 1 : -1);
-              const push = KNIFE_POWER * (1 - Math.abs(tLat)/KNIFE_WIDTH) * fall;
-              p.vx += (nx * side * push) * dpr * 0.06;
-              p.vy += (ny * side * push) * dpr * 0.06;
-            }
-
-            // --- WAKE behind the cursor tip ---
-            // Pull dots along motion direction for trail points behind the tip,
-            // and gently collapse perpendicular distance (so it looks dragged).
-            for (let k=0; k<trail.length; k++){
-              const tp = trail[k];
-              const relx = (p.x/dpr - tp.x), rely = (p.y/dpr - tp.y);
-              const along = relx*ux + rely*uy;   // >0 ahead of point, <0 behind
-              if (along > 0) continue;           // only behind
-              const perp  = relx*nx + rely*ny;
-              const d2 = relx*relx + rely*rely;
-              const w = Math.exp(-d2/(2*(SIGMA*SIGMA))) * (1 - Math.min(1, (-along)/WAKE_LEN));
-              if (w <= 0) continue;
-
-              // drag along the path
-              p.vx += (ux * WAKE_PULL * w) * dpr;
-              p.vy += (uy * WAKE_PULL * w) * dpr;
-
-              // collapse perpendicular distance (pull toward centerline)
-              p.vx += (-nx * (perp>0?1:-1) * 0.06 * w) * dpr;
-              p.vy += (-ny * (perp>0?1:-1) * 0.06 * w) * dpr;
-
-              // add a touch of curl around the path for fluid feel
-              p.vx += (-uy * SWIRL * w) * dpr;
-              p.vy += ( ux * SWIRL * w) * dpr;
+          // followers: get pulled by leader if within radius
+          if(leader >= 0 && i !== leader){
+            const dx = (lx - p.x), dy = (ly - p.y);
+            const dist = Math.hypot(dx, dy);
+            if(dist < FOLLOW_RADIUS*dpr){
+              const w = (1 - dist/(FOLLOW_RADIUS*dpr)); // 0..1
+              // pull toward leader
+              p.vx += dx * (FOLLOW_STRENGTH * w);
+              p.vy += dy * (FOLLOW_STRENGTH * w);
+              // add slight tangential drift for smooth arc
+              p.vx += (-dy) * 0.0006 * w;
+              p.vy += ( dx) * 0.0006 * w;
             }
           }
 
-          // viscosity + integrate
+          // integrate with damping
           p.vx *= DAMP; p.vy *= DAMP;
           p.x  += p.vx; p.y  += p.vy;
 
-          // draw (brighten when moving fast)
-          const speed = Math.min(1, Math.hypot(p.vx, p.vy) / (1.2*dpr));
-          const a = baseAlpha + speed * 0.22;
+          // draw (slightly brighten when moving)
+          const speed = Math.min(1, Math.hypot(p.vx, p.vy) / (1.0*dpr));
+          const a = baseAlpha + speed * 0.18;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
           ctx.fillStyle = `rgba(${color},${a})`;
@@ -266,32 +248,17 @@
         requestAnimationFrame(step);
       }
 
-      // Mouse handling
-      window.addEventListener('mousemove', (e) => {
-        cursor.x = e.clientX;
-        cursor.y = e.clientY;
-        if(cursor.px === -1e9){ cursor.px = cursor.x; cursor.py = cursor.y; }
-      }, {passive:true});
-      window.addEventListener('mouseleave', () => {
-        cursor.x = cursor.y = cursor.px = cursor.py = -1e9;
-        trail.length = 0;
-      });
+      // mouse events (update targets)
+      window.addEventListener('mousemove', (e) => { cursor.tx = e.clientX; cursor.ty = e.clientY; }, {passive:true});
+      window.addEventListener('mouseleave', () => { cursor.tx = cursor.ty = -1e9; }, {passive:true});
 
-      // Init
+      // init
       window.addEventListener('resize', resize);
       resize();
       requestAnimationFrame(step);
-
-      // ===== Quick knobs =====
-      // Stronger split:   increase KNIFE_POWER (1.2–2.0) or KNIFE_WIDTH (20–32)
-      // Wider wake:       increase WAKE_LEN (200–360) and SIGMA (140–180)
-      // More drag:        increase WAKE_PULL (0.5–0.8)
-      // More curl:        increase SWIRL (0.16–0.30)
-      // Denser dots:      reduce gap (36–40)
-      // Fainter texture:  lower baseAlpha (0.12–0.14)
     })();
 
-    // Keep the orb centered under the wordmark (in case layout shifts)
+    // Keep the orb centered beneath the wordmark
     (function(){
       const orb  = document.getElementById('orb');
       const title= document.getElementById('title');
