@@ -25,10 +25,10 @@
     display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 2rem;
   }
   .hero h1{
-    position:relative; z-index:2; font-size:clamp(2.4rem,6vw,4.2rem); font-weight:500; text-transform:lowercase;
+    font-size:clamp(2.4rem,6vw,4.2rem); font-weight:500; text-transform:lowercase; margin-bottom:.7rem;
   }
-  .cursive{ font-family:'Playfair Display',serif; font-style:italic; display:inline-block; }
-  .roles{ margin-top:.7rem; font-size:.95rem; color:var(--muted); max-width:45rem; text-wrap:balance; }
+  .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
+  .roles{ font-size:.95rem; color:var(--muted); max-width:45rem; text-wrap:balance; }
   .btn{
     margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.9rem;
     border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
@@ -54,8 +54,12 @@
   /* Mesh canvas */
   .fx-canvas{ position:fixed; inset:0; z-index:0; pointer-events:none; }
 
-  /* Per-letter distortion hooks */
-  #title .ch{ display:inline-block; will-change:transform, filter; }
+  /* Distort as a single block */
+  #copyGroup{
+    will-change:transform, filter;
+    display:inline-block;
+    transform-origin:center;
+  }
 
   @media(max-width:640px){
     .nav{ right:1rem; gap:1rem; font-size:.72rem; }
@@ -76,14 +80,13 @@
   <section class="hero" id="home">
     <div class="orb" id="orb" aria-hidden="true"></div>
 
-    <!-- Title letters split into spans so we can distort per-letter -->
-    <h1 id="title" aria-label="orjm"><span class="cursive">
-      <span class="ch">o</span><span class="ch">r</span><span class="ch">j</span><span class="ch">m</span>
-    </span></h1>
+    <!-- One group to distort (title + subtitle together) -->
+    <div id="copyGroup" aria-label="orjm and roles">
+      <h1 class="cursive">orjm</h1>
+      <p class="roles">strategist · ai-driven video · brand consultant</p>
+    </div>
 
-    <p class="roles">strategist · ai-driven video · brand consultant</p>
-
-    <!-- Leave "learn more" UNDISTORTED now -->
+    <!-- "learn more" stays stable -->
     <a id="learn" class="btn" href="learn-more.html" aria-label="learn more">learn more</a>
   </section>
 
@@ -98,45 +101,45 @@
 
 <script>
 /* =========================================================
-   CHAIN-LINK made of CLUSTERS (mini-dots) — GRAY
-   - Smooth fade-out at rest
-   - "orjm" distorts smoothly (per-letter easing)
-   - "learn more" stays stable (no distortion)
+   GRAY CHAIN-LINK (clusters) + GROUP DISTORT (title + subtitle)
+   - Mesh fades out smoothly at rest
+   - "learn more" unaffected
+   - Whole copy block distorts smoothly (translate/skew/scale + soft blur)
 ========================================================= */
 (function(){
   const canvas = document.getElementById('fx');
   const ctx = canvas.getContext('2d');
   if(!ctx) return;
 
-  /* ---------- Visual (gray mesh) ---------- */
-  const DOT_RGB   = '170,170,170';   // subtle gray
-  const GAP       = 46;              // grid spacing
-  const CLUSTER_N = 8;               // micro-dots per node
-  const CLUSTER_R = 5;               // cluster radius (CSS px)
-  const MICRO_R   = [0.35, 0.9];     // micro-dot radius (CSS px)
-  const DOT_ALPHA = 0.23;            // base opacity (scaled by activity)
+  /* ---------- Mesh visuals (gray) ---------- */
+  const DOT_RGB   = '150,150,150';
+  const GAP       = 46;
+  const CLUSTER_N = 8;
+  const CLUSTER_R = 5;
+  const MICRO_R   = [0.35, 0.9];
+  const DOT_ALPHA = 0.18;
 
-  const DRAW_LINKS      = true;      // faint connections near cursor
+  const DRAW_LINKS      = true;
   const LINK_ALPHA_BASE = 0.06;
-  const LINK_RADIUS     = 210;       // px
+  const LINK_RADIUS     = 210;
 
   /* ---------- Physics ---------- */
-  const DAMP   = 0.974;  // smoother settle
-  const SPRING = 0.008;  // soft return to origin
-  const NOISE  = 0.006;  // tiny shimmer
+  const DAMP   = 0.974;
+  const SPRING = 0.008;
+  const NOISE  = 0.006;
 
-  // Cursor influence (chain-link push)
-  const INFL_R    = 190;  // px
-  const PUSH      = 0.30; // strength
-  const RADIAL    = 0.60; // radial away
-  const TANGENTIAL= 0.10; // slight curl
-  const ALONG     = 0.16; // tug along motion
+  // Cursor influence
+  const INFL_R    = 190;
+  const PUSH      = 0.30;
+  const RADIAL    = 0.60;
+  const TANGENTIAL= 0.10;
+  const ALONG     = 0.16;
 
   /* ---------- Visibility (smooth fade) ---------- */
-  let activity = 0;              // 0..1
-  const MOVE_BOOST     = 0.16;   // bump per motion
-  const SPEED_GAIN     = 0.55;   // extra from speed
-  const ACTIVITY_DECAY = 0.0075; // slower decay → smoother fade-out
+  let activity = 0;
+  const MOVE_BOOST     = 0.16;
+  const SPEED_GAIN     = 0.55;
+  const ACTIVITY_DECAY = 0.0075;
 
   /* ---------- State ---------- */
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -146,9 +149,9 @@
   const cursor = { tx:null, ty:null, x:null, y:null, px:0, py:0, vx:0, vy:0 };
   const EASE = 0.14;
 
-  // Distortion target: title only (smooth per-letter easing)
-  const titleLetters = Array.from(document.querySelectorAll('#title .ch'));
-  const letterState = titleLetters.map(() => ({ x:0, y:0, bx:0, by:0 })); // current & target offsets
+  // Copy group (title + subtitle) distortion state
+  const copyGroup = document.getElementById('copyGroup');
+  const groupState = { x:0, y:0, sx:1, sy:1, skew:0, blur:0, tx:0, ty:0, tsx:1, tsy:1, tskew:0, tblur:0 };
 
   function resize(){
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -163,7 +166,7 @@
 
     for(let j=0;j<rows;j++){
       for(let i=0;i<cols;i++){
-        const ox_css = i*GAP + (j%2 ? GAP/2 : 0); // slight stagger
+        const ox_css = i*GAP + (j%2 ? GAP/2 : 0);
         const oy_css = j*GAP + 20;
         const x = ox_css * dpr, y = oy_css * dpr;
 
@@ -183,51 +186,66 @@
     }
   }
 
-  function distortTitle(){
-    // set target offsets (bx/by) based on cursor proximity, then ease x/y toward bx/by
+  function updateCopyGroup(){
+    const el = copyGroup;
+    if(!el) return;
+
+    // compute target transform based on cursor proximity/motion
+    const rect = el.getBoundingClientRect();
     const cx = cursor.x, cy = cursor.y;
-    const maxShiftPx = 9;     // softer than before
-    const radiusPx   = 220;
-    const r2 = radiusPx*radiusPx;
+    let shiftX = 0, shiftY = 0, skew = 0, scale = 1, blur = 0;
 
-    for(let idx=0; idx<titleLetters.length; idx++){
-      const el = titleLetters[idx];
-      const st = letterState[idx];
+    if(cx != null){
+      const ex = rect.left + rect.width/2;
+      const ey = rect.top  + rect.height/2;
+      const dx = ex - cx;
+      const dy = ey - cy;
+      const r  = 260; // influence radius (px)
+      const d2 = dx*dx + dy*dy;
 
-      if(cx == null){
-        st.bx = 0; st.by = 0;
-      }else{
-        const b = el.getBoundingClientRect();
-        const ex = (b.left + b.width/2);
-        const ey = (b.top  + b.height/2);
-        const dx = ex - cx;
-        const dy = ey - cy;
-        const d2 = dx*dx + dy*dy;
-        if(d2 > r2){
-          st.bx = 0; st.by = 0;
-        }else{
-          const fall = Math.exp(-d2/(2*r2));
-          const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
-          const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
-          const rlen = Math.max(1e-6, Math.hypot(dx,dy));
-          const rx = dx/rlen, ry = dy/rlen;
+      if(d2 < r*r){
+        const fall = Math.exp(-d2/(2*r*r));
+        const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
+        const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
+        const len = Math.max(1e-6, Math.hypot(dx,dy));
+        const rx = dx/len, ry = dy/len;
 
-          // target shift: mostly radial, slightly along motion
-          st.bx = (rx*0.72 + ux*0.28) * maxShiftPx * fall * activity;
-          st.by = (ry*0.72 + uy*0.28) * maxShiftPx * fall * activity;
-        }
+        // target translation (mostly radial, slightly along motion)
+        const maxShift = 12; // px
+        shiftX = (rx*0.7 + ux*0.3) * maxShift * fall * activity;
+        shiftY = (ry*0.7 + uy*0.3) * maxShift * fall * activity;
+
+        // gentle skew and scale to feel like pressure
+        skew  = (ux*ry - uy*rx) * 4 * fall * activity; // degrees
+        scale = 1 + 0.015 * fall * activity;           // up to +1.5%
+        blur  = Math.min(1.2, 0.9 * fall * activity);  // px
       }
-
-      // smooth easing toward target (very soft)
-      const ease = 0.10;
-      st.x += (st.bx - st.x) * ease;
-      st.y += (st.by - st.y) * ease;
-
-      // apply transform + a tiny blur tied to magnitude
-      const mag = Math.min(1, Math.hypot(st.x, st.y) / 12);
-      el.style.transform = `translate3d(${st.x}px, ${st.y}px, 0)`;
-      el.style.filter = mag > 0.02 ? `blur(${0.6*mag}px) contrast(${1 + 0.08*mag})` : 'none';
     }
+
+    // set targets
+    groupState.tx   = shiftX;
+    groupState.ty   = shiftY;
+    groupState.tsx  = scale;
+    groupState.tsy  = 1/scale; // counter-scale to keep weight stable
+    groupState.tskew= skew;
+    groupState.tblur= blur;
+
+    // ease toward targets (super smooth)
+    const ease = 0.12;
+    groupState.x    += (groupState.tx   - groupState.x)    * ease;
+    groupState.y    += (groupState.ty   - groupState.y)    * ease;
+    groupState.sx   += (groupState.tsx  - groupState.sx)   * ease;
+    groupState.sy   += (groupState.tsy  - groupState.sy)   * ease;
+    groupState.skew += (groupState.tskew- groupState.skew) * ease;
+    groupState.blur += (groupState.tblur- groupState.blur) * ease;
+
+    el.style.transform =
+      `translate3d(${groupState.x}px, ${groupState.y}px, 0) ` +
+      `skew(${groupState.skew}deg, 0deg) ` +
+      `scale(${groupState.sx}, ${groupState.sy})`;
+    el.style.filter = groupState.blur > 0.02
+      ? `blur(${groupState.blur}px) contrast(${1 + 0.06*groupState.blur})`
+      : 'none';
   }
 
   function step(){
@@ -247,21 +265,19 @@
     ctx.clearRect(0,0,W,H);
 
     // Precompute
-    const gate = Math.pow(activity, 1.2); // smooth fade
+    const gate = Math.pow(activity, 1.2);
     const infl2 = INFL_R*INFL_R;
     const link2 = LINK_RADIUS*LINK_RADIUS;
 
     const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
-    const ux = cursor.vx/vmag, uy = cursor.vy/vmag; // along motion
-    const tx = -uy, ty = ux;                        // tangent
+    const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
+    const tx = -uy, ty = ux;
 
     // Update nodes
     for(let n of nodes){
-      // Spring to origin
       n.vx += (n.ox - n.x) * SPRING;
       n.vy += (n.oy - n.y) * SPRING;
 
-      // Displacement from cursor (chain-link push)
       if(cursor.x != null && gate > 0){
         const dx = (n.x/dpr - cursor.x);
         const dy = (n.y/dpr - cursor.y);
@@ -276,16 +292,14 @@
         }
       }
 
-      // Subtle shimmer
       n.vx += (Math.random()-0.5)*NOISE;
       n.vy += (Math.random()-0.5)*NOISE;
 
-      // Integrate
       n.vx *= DAMP; n.vy *= DAMP;
       n.x  += n.vx; n.y  += n.vy;
     }
 
-    // Draw clusters (mini-dots)
+    // Draw clusters
     if(gate > 0.002){
       for(let n of nodes){
         for(let m of n.cluster){
@@ -300,13 +314,13 @@
       }
     }
 
-    // Optional faint links near cursor (to sell mesh)
+    // Optional faint links
     if(DRAW_LINKS && gate > 0.002 && cursor.x != null){
       ctx.lineWidth = (dpr>1?0.75:1);
       for(let j=0;j<rows;j++){
         for(let i=0;i<cols;i++){
-          const idx = j*cols + i;
-          const a = nodes[idx];
+          const id = j*cols + i;
+          const a = nodes[id];
           const dx = (a.x/dpr - cursor.x);
           const dy = (a.y/dpr - cursor.y);
           const d2 = dx*dx + dy*dy;
@@ -316,19 +330,19 @@
           ctx.strokeStyle = `rgba(${DOT_RGB},${alpha})`;
 
           if(i < cols-1){
-            const b = nodes[idx+1];
+            const b = nodes[id+1];
             ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
           }
           if(j < rows-1){
-            const b = nodes[idx+cols];
+            const b = nodes[id+cols];
             ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
           }
         }
       }
     }
 
-    // Smooth title distortion (only ORJM)
-    distortTitle();
+    // Distort the whole copy group (title + subtitle)
+    updateCopyGroup();
 
     requestAnimationFrame(step);
   }
@@ -336,10 +350,10 @@
   // Input
   window.addEventListener('mousemove', (e)=>{
     cursor.tx = e.clientX; cursor.ty = e.clientY;
-    activity = Math.min(1, activity + 0.12); // snappy fade-in
+    activity = Math.min(1, activity + 0.12);
   }, {passive:true});
   window.addEventListener('mouseleave', ()=>{
-    cursor.tx = cursor.ty = null; // graceful fade out
+    cursor.tx = cursor.ty = null; // graceful fade
   }, {passive:true});
 
   // Init
@@ -349,10 +363,10 @@
 
   // Keep orb centered under the wordmark
   (function keepOrb(){
-    const orb=document.getElementById('orb'), title=document.getElementById('title'), hero=document.getElementById('home');
+    const orb=document.getElementById('orb'), hero=document.getElementById('home'), copy=document.getElementById('copyGroup');
     function center(){
-      if(!orb||!title||!hero) return;
-      const r=title.getBoundingClientRect(), h=hero.getBoundingClientRect();
+      if(!orb||!copy||!hero) return;
+      const r=copy.getBoundingClientRect(), h=hero.getBoundingClientRect();
       orb.style.left = (r.left + r.width/2 - h.left) + 'px';
       orb.style.top  = (r.top  + r.height/2 - h.top ) + 'px';
     }
