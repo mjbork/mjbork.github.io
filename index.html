@@ -6,129 +6,88 @@
   <title>ORJM</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg-bone: #f9f6f1;
-      --text-dark: #111111;
-      --text-muted: #666666;
+    :root{
+      /* slightly whiter off-white */
+      --bg-bone:#fcfbf8;
+      --text-dark:#111111;
+      --text-muted:#666666;
+      --grid-dot:#d9d6cf;        /* dots base */
+      --grid-dot-strong:#bfb9ae; /* dots when close to cursor */
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-bone);
-      color: var(--text-dark);
-      scroll-behavior: smooth;
-      overflow-x: hidden;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg-bone);
+      color:var(--text-dark);
+      scroll-behavior:smooth;
+      overflow-x:hidden;
     }
+
+    /* Canvas background (interactive dots) */
+    .fx-canvas{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none; /* purely decorative */
+    }
+
     /* Navigation */
-    .nav {
-      position: absolute;
-      top: 1.2rem;
-      right: 2.4rem;
-      display: flex;
-      gap: 1.4rem;
-      font-size: 0.78rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      z-index: 2;
+    .nav{
+      position:absolute;top:1.2rem;right:2.4rem;z-index:2;
+      display:flex;gap:1.4rem;font-size:.78rem;font-weight:500;letter-spacing:.02em;
     }
-    .nav a {
-      color: var(--text-dark);
-      text-decoration: none;
-      transition: opacity 0.2s;
-      text-transform: lowercase;
+    .nav a{
+      color:var(--text-dark);text-decoration:none;text-transform:lowercase;
+      transition:opacity .2s, transform .2s;
     }
-    .nav a:hover { opacity: 0.7; }
+    .nav a:hover{opacity:.7;transform:translateY(-1px)}
 
-    /* Hero Section */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 0 2rem;
+    /* Hero */
+    .hero{
+      position:relative;z-index:1;min-height:100vh;
+      display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+      padding:0 2rem;
     }
-    .hero h1 {
-      font-size: clamp(2.1rem, 5vw, 3.5rem);
-      font-weight: 500;
-      color: var(--text-dark);
-      text-transform: lowercase;
-      user-select: none;
-      transition: transform 0.15s ease;
-      will-change: transform;
+    .hero h1{
+      font-size:clamp(2.1rem,5vw,3.5rem);
+      font-weight:500;text-transform:lowercase;user-select:none;
+      transition:transform .15s ease, text-shadow .15s ease;
+      will-change:transform,text-shadow;
+      text-shadow:0 0 0 rgba(0,0,0,0);
     }
-    .hero h1 .cursive {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-    }
-    .roles {
-      margin-top: 0.7rem;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      max-width: 45rem;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.8s ease, transform 0.8s ease;
-    }
-    .btn {
-      margin-top: 1.8rem;
-      padding: 0.7rem 1.8rem;
-      font-size: 0.82rem;
-      color: var(--text-dark);
-      background: transparent;
-      border: 1px solid var(--text-dark);
-      border-radius: 0.34rem;
-      text-decoration: none;
-      text-transform: lowercase;
-      display: inline-block;
-      transition: transform 0.2s ease, background 0.2s, color 0.2s;
-      position: relative;
-    }
-    .btn:hover {
-      background: var(--text-dark);
-      color: var(--bg-bone);
-      transform: scale(1.05);
+    .hero .cursive{font-family:'Playfair Display',serif;font-style:italic}
+
+    .roles{
+      margin-top:.7rem;font-size:.9rem;color:var(--text-muted);max-width:45rem;
+      opacity:0;transform:translateY(20px);transition:opacity .8s ease, transform .8s ease;
     }
 
-    footer {
-      position: absolute;
-      bottom: 1.2rem;
-      width: 100%;
-      display: flex;
-      justify-content: center;
+    .btn{
+      margin-top:1.8rem;padding:.7rem 1.8rem;font-size:.82rem;
+      color:var(--text-dark);background:transparent;border:1px solid var(--text-dark);
+      border-radius:.34rem;text-decoration:none;text-transform:lowercase;display:inline-block;
+      transition:transform .2s ease, background .2s, color .2s;
+      position:relative;
     }
-    .socials {
-      display: flex;
-      gap: 1.45rem;
-      align-items: center;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.8s ease, transform 0.8s ease;
-    }
-    .socials a {
-      color: var(--text-muted);
-      display: inline-flex;
-      transition: transform 0.2s ease, opacity 0.2s;
-    }
-    .socials a:hover {
-      opacity: 0.9;
-      transform: scale(1.2) rotate(6deg);
-    }
-    .socials svg {
-      width: 22px; height: 22px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 1.5;
-    }
-    @media(max-width: 640px) {
-      .nav { right: 1rem; gap: 1rem; font-size: 0.72rem; }
-      .roles { font-size: 0.8rem; }
+    .btn:hover{background:var(--text-dark);color:var(--bg-bone);transform:scale(1.05)}
+
+    footer{position:absolute;bottom:1.2rem;width:100%;display:flex;justify-content:center;z-index:1}
+    .socials{display:flex;gap:1.45rem;align-items:center;opacity:0;transform:translateY(20px);transition:opacity .8s ease, transform .8s ease;}
+    .socials a{color:var(--text-muted);display:inline-flex;transition:transform .2s ease, opacity .2s}
+    .socials a:hover{opacity:.9;transform:scale(1.18) rotate(4deg)}
+    .socials svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5}
+
+    @media(max-width:640px){
+      .nav{right:1rem;gap:1rem;font-size:.72rem}
+      .roles{font-size:.8rem}
     }
   </style>
 </head>
 <body>
+  <!-- Interactive dots background -->
+  <canvas class="fx-canvas" id="fx"></canvas>
+
   <nav class="nav">
     <a href="about.html">about</a>
     <a href="campaigns.html">campaigns</a>
@@ -152,19 +111,25 @@
   </footer>
 
   <script>
-    // Hero title tilt
+    /* =========================
+       HERO TITLE: tilt + shadow
+       ========================= */
     const title = document.getElementById('heroTitle');
     document.addEventListener('mousemove', (e) => {
       const { innerWidth:w, innerHeight:h } = window;
-      const x = (e.clientX / w - 0.5) * 12;
-      const y = (e.clientY / h - 0.5) * -12;
+      const x = (e.clientX / w - 0.5) * 20;
+      const y = (e.clientY / h - 0.5) * -20;
       title.style.transform = `rotateX(${y}deg) rotateY(${x}deg)`;
+      title.style.textShadow = `${-x/2}px ${y/2}px 12px rgba(0,0,0,0.22)`;
     });
     document.addEventListener('mouseleave', () => {
       title.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      title.style.textShadow = '0 0 0 rgba(0,0,0,0)';
     });
 
-    // Scroll reveal
+    /* =========================
+       SCROLL REVEAL (roles + socials)
+       ========================= */
     const reveal = (el) => {
       const obs = new IntersectionObserver(entries => {
         entries.forEach(entry => {
@@ -179,8 +144,86 @@
     };
     reveal(document.getElementById('roles'));
     reveal(document.getElementById('socials'));
+
+    /* =========================
+       INTERACTIVE DOT FIELD
+       ========================= */
+    (function(){
+      const canvas = document.getElementById('fx');
+      const ctx = canvas.getContext('2d');
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let W, H, dots = [], mouse = {x:-1e9, y:-1e9};
+
+      const CFG = {
+        gap: 46,             // spacing between dots
+        jitter: 0.7,         // tiny random drift
+        repelRadius: 130,    // cursor influence
+        repelForce: 0.12,    // how strongly dots move away
+        size: 2.2            // dot radius
+      };
+
+      function resize(){
+        W = canvas.width = Math.floor(innerWidth * dpr);
+        H = canvas.height = Math.floor(innerHeight * dpr);
+        canvas.style.width = innerWidth+'px';
+        canvas.style.height = innerHeight+'px';
+        initDots();
+      }
+
+      function initDots(){
+        dots = [];
+        const cols = Math.ceil(innerWidth / CFG.gap)+2;
+        const rows = Math.ceil(innerHeight / CFG.gap)+2;
+        for(let y=0;y<rows;y++){
+          for(let x=0;x<cols;x++){
+            const px = (x*CFG.gap + (y%2? CFG.gap/2:0)) * dpr; // stagger rows
+            const py = (y*CFG.gap + 20) * dpr;
+            dots.push({x:px, y:py, ox:px, oy:py, vx:0, vy:0});
+          }
+        }
+      }
+
+      function step(){
+        ctx.clearRect(0,0,W,H);
+        for(const p of dots){
+          // gentle return to origin
+          const dx0 = p.ox - p.x, dy0 = p.oy - p.y;
+          p.vx += dx0 * 0.002;
+          p.vy += dy0 * 0.002;
+
+          // cursor repel
+          const dx = p.x - mouse.x*dpr, dy = p.y - mouse.y*dpr;
+          const dist = Math.hypot(dx,dy);
+          if(dist < CFG.repelRadius*dpr){
+            const f = (1 - dist/(CFG.repelRadius*dpr)) * CFG.repelForce;
+            p.vx += (dx/dist || 0) * f * 3.2;
+            p.vy += (dy/dist || 0) * f * 3.2;
+          }
+
+          // light jitter
+          p.vx += (Math.random()-0.5)*CFG.jitter*0.02;
+          p.vy += (Math.random()-0.5)*CFG.jitter*0.02;
+
+          // damping
+          p.vx *= 0.96; p.vy *= 0.96;
+          p.x += p.vx;  p.y += p.vy;
+
+          // draw
+          const near = dist < CFG.repelRadius*dpr ? 1 - dist/(CFG.repelRadius*dpr) : 0;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, CFG.size*dpr, 0, Math.PI*2);
+          ctx.fillStyle = near>0 ? `rgba(191,185,174,${0.35+near*0.35})` : `rgba(217,214,207,0.45)`;
+          ctx.fill();
+        }
+        requestAnimationFrame(step);
+      }
+
+      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; }, {passive:true});
+      window.addEventListener('mouseleave', () => { mouse.x = -1e9; mouse.y = -1e9; });
+      window.addEventListener('resize', resize);
+      resize();
+      step();
+    })();
   </script>
 </body>
 </html>
-
-
