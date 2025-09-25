@@ -9,45 +9,38 @@
   :root{ --bg:#fcfbf8; --fg:#111; --muted:#666; }
   *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
   html,body{ height:100%; }
-  body{
-    font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg); color:var(--fg); overflow-x:hidden;
-  }
+  body{ font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--fg); overflow-x:hidden; }
 
-  /* NAV */
+  /* Nav */
   .nav{
     position:fixed; top:1.2rem; right:2.4rem; z-index:3;
-    display:flex; gap:1.4rem; font-size:.78rem; font-weight:500; letter-spacing:.02em;
-    text-transform:lowercase;
+    display:flex; gap:1.4rem; font-size:.78rem; font-weight:500; letter-spacing:.02em; text-transform:lowercase;
   }
   .nav a{ color:var(--fg); text-decoration:none; transition:opacity .2s; }
   .nav a:hover{ opacity:.7; }
 
-  /* HERO */
+  /* Hero */
   .hero{
     position:relative; z-index:1; min-height:100vh;
-    display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;
-    padding:0 2rem;
+    display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 2rem;
   }
   .hero h1{ position:relative; z-index:2; font-size:clamp(2.1rem,5vw,3.8rem); font-weight:500; text-transform:lowercase; }
   .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
   .roles{ margin-top:.7rem; font-size:.95rem; color:var(--muted); max-width:45rem; text-wrap:balance; }
   .btn{
-    margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.85rem;
-    border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
-    text-decoration:none; text-transform:lowercase; display:inline-block;
-    transition:background .2s,color .2s,transform .2s;
+    margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.85rem; border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
+    text-decoration:none; text-transform:lowercase; display:inline-block; transition:background .2s,color .2s,transform .2s;
   }
   .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
 
-  /* FOOTER */
+  /* Footer */
   footer{ position:fixed; bottom:1.2rem; left:0; right:0; display:flex; justify-content:center; z-index:1; }
   .socials{ display:flex; gap:1.45rem; align-items:center; }
   .socials a{ color:#7a7a7a; display:inline-flex; transition:opacity .2s, transform .2s; }
   .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
   .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
-  /* ORB behind title */
+  /* Optional gentle orb behind the wordmark */
   .orb{
     position:absolute; z-index:1; left:50%; top:50%; translate:-50% -50%;
     width:min(60vw,660px); aspect-ratio:1/1; border-radius:50%;
@@ -55,7 +48,7 @@
     filter:blur(.2px); pointer-events:none;
   }
 
-  /* DOTS CANVAS */
+  /* Micro-dot canvas */
   .fx-canvas{ position:fixed; inset:0; z-index:0; pointer-events:none; }
 
   @media(max-width:640px){
@@ -65,10 +58,8 @@
 </style>
 </head>
 <body>
-  <!-- Background micro-dots canvas -->
   <canvas id="fx" class="fx-canvas" aria-hidden="true"></canvas>
 
-  <!-- NAV -->
   <nav class="nav" aria-label="Primary">
     <a href="about.html">about</a>
     <a href="campaigns.html">campaigns</a>
@@ -76,7 +67,6 @@
     <a href="contact.html">contact</a>
   </nav>
 
-  <!-- HERO -->
   <section class="hero" id="home">
     <div class="orb" id="orb" aria-hidden="true"></div>
     <h1 id="title"><span class="cursive">orjm</span></h1>
@@ -84,7 +74,6 @@
     <a class="btn" href="learn-more.html">learn more</a>
   </section>
 
-  <!-- FOOTER -->
   <footer>
     <div class="socials">
       <a aria-label="YouTube" href="#"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg></a>
@@ -96,196 +85,205 @@
 
 <script>
 /* =========================================================
-   MICRO-DOTS — Hook & Drag, visible ONLY while moving
-   Robust version: guarded init, try/catch in loop
+   RED CHAIN-LINK MICRO-DOTS
+   - Full-screen dot grid
+   - Cursor displaces dots like touching chain-link
+   - Dots/lines fade in with motion, fade out smoothly at rest
+   - No hook/leader logic
 ========================================================= */
 (function(){
   const canvas = document.getElementById('fx');
-  if(!canvas){ console.warn('No canvas#fx found'); return; }
   const ctx = canvas.getContext('2d');
-  if(!ctx){ console.warn('2D context unavailable'); return; }
+  if(!ctx) return;
 
-  // ---- Config (safe, tweakable) ----
-  const COLOR = '191,185,174';  // warm grey; try '200,40,40' for red
-  const GAP = 52;               // grid spacing (bigger = more dispersed)
-  const RMIN = 1.0, RMAX = 1.6; // dot radius in CSS px
-  const BASE_ALPHA = 0.22;
+  // ---------- Tuning ----------
+  const COLOR_DOT  = '200,40,40';    // red dots
+  const COLOR_LINE = '200,40,40';    // red lines
+  const GAP   = 48;                  // grid spacing (smaller = denser)
+  const RMIN  = 0.9, RMAX = 1.6;     // dot radius (CSS px)
+  const DOT_ALPHA_BASE  = 0.20;      // base opacity (scaled by activity)
+  const LINE_ALPHA_BASE = 0.10;      // base line opacity near cursor
 
-  // Physics (smooth)
-  const DAMP   = 0.968; // higher = smoother, less bounce
-  const SPRING = 0.008; // return-to-origin
-  const NOISE  = 0.010; // tiny organic jitter
+  // Physics (smooth, non-rubbery)
+  const DAMP   = 0.970;  // viscosity (higher = smoother, longer settle)
+  const SPRING = 0.009;  // return to origin
+  const NOISE  = 0.006;  // tiny organic shimmer
 
-  // Hook behaviour
-  const FOLLOW_RADIUS   = 190;
-  const FOLLOW_STRENGTH = 0.095;
-  const LEADER_STRENGTH = 0.36;
-  const HOOK_RADIUS     = 110;
+  // Cursor influence (mesh push)
+  const R_INFL   = 180;  // influence radius (px)
+  const FORCE    = 0.30; // push strength from cursor velocity
+  const RADIAL   = 0.55; // how much push is radial away from cursor
+  const TANGENT  = 0.15; // slight curl
 
-  // Visibility gating
-  let activity = 0;                   // 0..1
-  const MOVE_BOOST     = 0.22;
-  const SPEED_GAIN     = 0.55;
-  const ACTIVITY_DECAY = 0.028;
-  const ACTIVE_EPS     = 0.05;
-  const IDLE_ZERO_MS   = 90;
+  // Visibility (motion-activated with smooth fade)
+  let activity = 0;                 // 0..1
+  const MOVE_BOOST     = 0.18;      // bump per movement
+  const SPEED_GAIN     = 0.55;      // extra from speed
+  const ACTIVITY_DECAY = 0.010;     // lower = longer fade (smooth)
 
-  // State
+  // Lines drawn only near cursor
+  const DRAW_LINES      = true;
+  const LINE_RADIUS     = 220;      // where to draw connections (px)
+
+  // ---------- State ----------
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
-  let W=0, H=0, dots=[];
-  let leader = -1;
-  let lastT = 0;
-  let lastMoveTs = 0;
+  let W=0, H=0, cols=0, rows=0;
+  let dots=[]; // row-major
+  const cursor = { tx:null, ty:null, x:null, y:null, px:0, py:0, vx:0, vy:0 };
+  const EASE = 0.14;
 
-  // Smoothed cursor
-  const cursor = { tx:null, ty:null, x:null, y:null, px:0, py:0 };
-  const EASE = 0.12;
+  function idx(i,j){ return j*cols + i; }
 
   function resize(){
-    try{
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      W = canvas.width  = Math.max(1, Math.floor(innerWidth  * dpr));
-      H = canvas.height = Math.max(1, Math.floor(innerHeight * dpr));
-      canvas.style.width  = innerWidth + 'px';
-      canvas.style.height = innerHeight + 'px';
-      buildDots();
-    }catch(e){ console.error('resize error', e); }
-  }
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.width  = Math.floor(innerWidth  * dpr);
+    H = canvas.height = Math.floor(innerHeight * dpr);
+    canvas.style.width  = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
 
-  function buildDots(){
-    dots.length = 0;
-    const gx = Math.ceil(innerWidth  / GAP) + 2;
-    const gy = Math.ceil(innerHeight / GAP) + 2;
-    for(let j=0;j<gy;j++){
-      for(let i=0;i<gx;i++){
-        const ox = (i*GAP + (j%2 ? GAP/2 : 0));
-        const oy = (j*GAP + 20);
+    cols = Math.ceil(innerWidth / GAP) + 2;
+    rows = Math.ceil(innerHeight/ GAP) + 2;
+
+    dots = new Array(cols*rows);
+    for(let j=0;j<rows;j++){
+      for(let i=0;i<cols;i++){
+        const ox = (i*GAP);
+        const oy = (j*GAP);
         const x = ox * dpr, y = oy * dpr;
         const r = (RMIN + Math.random()*(RMAX-RMIN)) * dpr;
-        dots.push({ x, y, ox:x, oy:y, vx:0, vy:0, r });
+        dots[idx(i,j)] = { x, y, ox:x, oy:y, vx:0, vy:0, r };
       }
     }
   }
 
-  function step(ts){
-    try{
-      if(!lastT) lastT = ts;
-      const dt = Math.max(1, Math.min(32, ts - lastT));
-      lastT = ts;
+  function step(){
+    // Smooth cursor + velocity
+    if(cursor.tx != null){
+      if(cursor.x == null){ cursor.x = cursor.tx; cursor.y = cursor.ty; cursor.px = cursor.x; cursor.py = cursor.y; }
+      cursor.x += (cursor.tx - cursor.x) * EASE;
+      cursor.y += (cursor.ty - cursor.y) * EASE;
+      cursor.vx = (cursor.x - cursor.px);
+      cursor.vy = (cursor.y - cursor.py);
+      const vmag = Math.hypot(cursor.vx, cursor.vy);
 
-      // Cursor smoothing
-      if(cursor.tx != null){
-        if(cursor.x == null){
-          cursor.x = cursor.tx; cursor.y = cursor.ty; cursor.px = cursor.x; cursor.py = cursor.y;
-        }
-        cursor.x += (cursor.tx - cursor.x) * EASE;
-        cursor.y += (cursor.ty - cursor.y) * EASE;
-        const vx = (cursor.x - cursor.px);
-        const vy = (cursor.y - cursor.py);
-        const vmag = Math.hypot(vx, vy);
-        cursor.px = cursor.x; cursor.py = cursor.y;
+      // Activity rises with motion (then decays below)
+      activity = Math.min(1, activity + MOVE_BOOST + SPEED_GAIN * Math.min(1, vmag/28));
 
-        // Activity rises with motion
-        activity = Math.min(1, activity + MOVE_BOOST + SPEED_GAIN * Math.min(1, vmag/28));
-      }
-      // Decay and hard idle cut
-      activity = Math.max(0, activity - ACTIVITY_DECAY);
-      const idleTooLong = (performance.now() - lastMoveTs) > IDLE_ZERO_MS || cursor.tx == null;
-      if(idleTooLong){ activity = 0; }
+      cursor.px = cursor.x; cursor.py = cursor.y;
+    }
+    activity = Math.max(0, activity - ACTIVITY_DECAY);
 
-      // Clear frame (never hides page content)
-      ctx.clearRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);
 
-      // Leader only if active
-      if(activity > ACTIVE_EPS && cursor.x != null){
-        let best=-1, bestD2 = HOOK_RADIUS*HOOK_RADIUS;
-        for(let i=0;i<dots.length;i++){
-          const p = dots[i];
-          const dx = p.x/dpr - cursor.x, dy = p.y/dpr - cursor.y;
+    const gate = Math.pow(activity, 1.2); // gentle fade curve
+    const rInfl2 = (R_INFL*R_INFL);
+    const rLine2 = (LINE_RADIUS*LINE_RADIUS);
+
+    // Precompute unit vectors for tangent/radial push
+    const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
+    const ux = cursor.vx / vmag, uy = cursor.vy / vmag; // direction of motion
+    const tx = -uy, ty = ux; // perpendicular
+
+    // Update dynamics
+    for(let j=0;j<rows;j++){
+      for(let i=0;i<cols;i++){
+        const p = dots[idx(i,j)];
+
+        // Spring back to original
+        p.vx += (p.ox - p.x) * SPRING;
+        p.vy += (p.oy - p.y) * SPRING;
+
+        // Cursor displacement field (like pressing chain-link)
+        if(cursor.x != null && activity > 0){
+          const dx = (p.x/dpr - cursor.x);
+          const dy = (p.y/dpr - cursor.y);
           const d2 = dx*dx + dy*dy;
-          if(d2 < bestD2){ bestD2 = d2; best = i; }
-        }
-        leader = best;
-      } else {
-        leader = -1;
-      }
-
-      // Pull leader
-      let lx=0, ly=0;
-      if(leader >= 0 && cursor.x != null){
-        const L = dots[leader];
-        lx = L.x; ly = L.y;
-        L.vx += (cursor.x*dpr - L.x) * LEADER_STRENGTH;
-        L.vy += (cursor.y*dpr - L.y) * LEADER_STRENGTH;
-      }
-
-      // Draw only when active
-      if(activity > 0){
-        const gate = Math.pow(activity, 1.6); // squash faint leftovers
-
-        for(let i=0;i<dots.length;i++){
-          const p = dots[i];
-
-          // spring to origin
-          p.vx += (p.ox - p.x) * SPRING;
-          p.vy += (p.oy - p.y) * SPRING;
-
-          // followers
-          if(leader >= 0 && i !== leader){
-            const dx = (lx - p.x), dy = (ly - p.y);
-            const dist = Math.hypot(dx, dy);
-            if(dist < FOLLOW_RADIUS*dpr){
-              const w = (1 - dist/(FOLLOW_RADIUS*dpr));
-              p.vx += dx * (FOLLOW_STRENGTH * w);
-              p.vy += dy * (FOLLOW_STRENGTH * w);
-              // slight tangential flow
-              p.vx += (-dy) * 0.00045 * w;
-              p.vy += ( dx) * 0.00045 * w;
-            }
+          if(d2 < rInfl2){
+            const fall = Math.exp(-d2/(2*rInfl2)); // soft Gaussian falloff
+            // Radial push away from cursor + slight tangent curl + along-motion tug
+            const mag = FORCE * fall * dpr;
+            const rlen = Math.max(1e-6, Math.hypot(dx,dy));
+            const rx = (dx/rlen), ry = (dy/rlen); // radial away
+            p.vx += (rx*RADIAL + tx*TANGENT + ux*0.15) * mag;
+            p.vy += (ry*RADIAL + ty*TANGENT + uy*0.15) * mag;
           }
+        }
 
-          // organic jitter
-          p.vx += (Math.random()-0.5) * NOISE;
-          p.vy += (Math.random()-0.5) * NOISE;
+        // Subtle shimmer to avoid dead stillness
+        p.vx += (Math.random()-0.5)*NOISE;
+        p.vy += (Math.random()-0.5)*NOISE;
 
-          // integrate
-          p.vx *= DAMP; p.vy *= DAMP;
-          p.x  += p.vx; p.y  += p.vy;
+        // Integrate with damping
+        p.vx *= DAMP; p.vy *= DAMP;
+        p.x  += p.vx; p.y  += p.vy;
+      }
+    }
 
-          // alpha
-          const speed = Math.min(1, Math.hypot(p.vx, p.vy) / (1.0*dpr));
-          const a = (BASE_ALPHA + speed*0.12) * gate;
-          if(a > 0.01){
+    // Draw dots (fade by activity)
+    if(gate > 0.002){
+      for(let j=0;j<rows;j++){
+        for(let i=0;i<cols;i++){
+          const p = dots[idx(i,j)];
+          // Slightly brighten where flow is faster
+          const speed = Math.min(1, Math.hypot(p.vx, p.vy) / (1.2*dpr));
+          const a = (DOT_ALPHA_BASE + speed*0.12) * gate;
+          if(a > 0.008){
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-            ctx.fillStyle = `rgba(${COLOR},${a})`;
+            ctx.fillStyle = `rgba(${COLOR_DOT},${a})`;
             ctx.fill();
           }
         }
       }
-
-      requestAnimationFrame(step);
-    }catch(err){
-      console.error('animation error', err);
-      // keep the page visible even if the effect fails
-      try{ requestAnimationFrame(step); }catch(e){}
     }
+
+    // Optional links near the cursor to sell the net feeling
+    if(DRAW_LINES && gate > 0.002 && cursor.x != null){
+      ctx.lineWidth = 1 * (dpr>1?0.75:1);
+      for(let j=0;j<rows;j++){
+        for(let i=0;i<cols;i++){
+          const p = dots[idx(i,j)];
+          const dx = (p.x/dpr - cursor.x);
+          const dy = (p.y/dpr - cursor.y);
+          const d2 = dx*dx + dy*dy;
+          if(d2 < rLine2){
+            const w = Math.exp(-d2/(2*rLine2));
+            const a = LINE_ALPHA_BASE * gate * (0.6 + 0.4*w);
+            ctx.strokeStyle = `rgba(${COLOR_LINE},${a})`;
+
+            // right neighbor
+            if(i < cols-1){
+              const q = dots[idx(i+1,j)];
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(q.x, q.y);
+              ctx.stroke();
+            }
+            // bottom neighbor
+            if(j < rows-1){
+              const q = dots[idx(i,j+1)];
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(q.x, q.y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+    }
+
+    requestAnimationFrame(step);
   }
 
-  // Mouse
-  window.addEventListener('mousemove', (e) => {
-    if(cursor.tx == null){ activity = 1; }
+  // Input
+  window.addEventListener('mousemove', (e)=>{
     cursor.tx = e.clientX; cursor.ty = e.clientY;
-    lastMoveTs = performance.now();
-    activity = Math.min(1, activity + 0.18);
+    activity = Math.min(1, activity + 0.15); // snappy fade-in
+  }, {passive:true});
+  window.addEventListener('mouseleave', ()=>{
+    cursor.tx = cursor.ty = null; // slow fade-out will take over
   }, {passive:true});
 
-  window.addEventListener('mouseleave', () => {
-    cursor.tx = cursor.ty = null;
-    activity = 0; // instant vanish on leave
-  }, {passive:true});
-
-  // Start safely
   window.addEventListener('resize', resize);
   resize();
   requestAnimationFrame(step);
@@ -293,22 +291,17 @@
 </script>
 
 <script>
-/* Keep the orb centered beneath the wordmark (guarded) */
+/* Keep the orb centered under the wordmark */
 (function(){
-  function centerOrb(){
-    const orb  = document.getElementById('orb');
-    const title= document.getElementById('title');
-    const hero = document.getElementById('home');
-    if(!orb || !title || !hero) return;
-    const r = title.getBoundingClientRect();
-    const h = hero.getBoundingClientRect();
-    const cx = r.left + r.width/2 - h.left;
-    const cy = r.top  + r.height/2 - h.top;
-    orb.style.left = cx + 'px';
-    orb.style.top  = cy + 'px';
+  const orb=document.getElementById('orb'), title=document.getElementById('title'), hero=document.getElementById('home');
+  function center(){
+    if(!orb||!title||!hero) return;
+    const r=title.getBoundingClientRect(), h=hero.getBoundingClientRect();
+    orb.style.left = (r.left + r.width/2 - h.left) + 'px';
+    orb.style.top  = (r.top  + r.height/2 - h.top ) + 'px';
   }
-  window.addEventListener('load', centerOrb);
-  window.addEventListener('resize', () => requestAnimationFrame(centerOrb));
+  window.addEventListener('load', center);
+  window.addEventListener('resize', () => requestAnimationFrame(center));
 })();
 </script>
 </body>
