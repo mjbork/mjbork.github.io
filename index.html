@@ -1,120 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ORJM</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
-<style>
-  :root{ --bg:#fcfbf8; --fg:#111; --muted:#666; }
-  *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
-  html,body{ height:100%; }
-  body{ font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--fg); overflow-x:hidden; }
-
-  .nav{
-    position:fixed; top:1.2rem; right:2.4rem; z-index:3;
-    display:flex; gap:1.4rem; font-size:.78rem; font-weight:500; letter-spacing:.02em; text-transform:lowercase;
-  }
-  .nav a{ color:var(--fg); text-decoration:none; transition:opacity .2s; }
-  .nav a:hover{ opacity:.7; }
-
-  .hero{
-    position:relative; z-index:1; min-height:100vh;
-    display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 2rem;
-  }
-  .hero h1{ font-size:clamp(2.6rem,6.2vw,4.6rem); font-weight:500; text-transform:lowercase; margin-bottom:.7rem; }
-  .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
-  .roles{ font-size:.98rem; color:var(--muted); max-width:48rem; text-wrap:balance; }
-  .btn{
-    margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.9rem;
-    border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
-    text-decoration:none; text-transform:lowercase; display:inline-block; transition:background .2s,color .2s,transform .2s;
-  }
-  .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
-
-  footer{ position:fixed; bottom:1.2rem; left:0; right:0; display:flex; justify-content:center; z-index:1; }
-  .socials{ display:flex; gap:1.45rem; align-items:center; }
-  .socials a{ color:#7a7a7a; display:inline-flex; transition:opacity .2s, transform .2s; }
-  .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
-  .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
-
-  .orb{
-    position:absolute; z-index:1; left:50%; top:50%; translate:-50% -50%;
-    width:min(60vw,660px); aspect-ratio:1/1; border-radius:50%;
-    background: radial-gradient(closest-side, rgba(0,0,0,.06), rgba(0,0,0,.04) 35%, rgba(0,0,0,.02) 65%, rgba(0,0,0,0) 80%);
-    filter:blur(.2px); pointer-events:none;
-  }
-
-  .fx-canvas{ position:fixed; inset:0; z-index:0; pointer-events:none; }
-
-  /* Distort the title + subtitle together */
-  #copyGroup{ will-change:transform, filter; display:inline-block; transform-origin:center; }
-
-  @media(max-width:640px){
-    .nav{ right:1rem; gap:1rem; font-size:.72rem; }
-    .roles{ font-size:.9rem; }
-  }
-</style>
-</head>
-<body>
-  <canvas id="fx" class="fx-canvas" aria-hidden="true"></canvas>
-
-  <nav class="nav" aria-label="Primary">
-    <a href="about.html">about</a>
-    <a href="campaigns.html">campaigns</a>
-    <a href="reel.html">reel</a>
-    <a href="contact.html">contact</a>
-  </nav>
-
-  <section class="hero" id="home">
-    <div class="orb" id="orb" aria-hidden="true"></div>
-
-    <div id="copyGroup" aria-label="orjm and roles">
-      <h1 class="cursive">orjm</h1>
-      <p class="roles">creative strategist · ai-driven video · brand consultant</p>
-    </div>
-
-    <a id="learn" class="btn" href="learn-more.html">learn more</a>
-  </section>
-
-  <footer>
-    <div class="socials">
-      <a aria-label="YouTube" href="#"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg></a>
-      <a aria-label="Discord" href="#"><svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/></svg></a>
-      <a aria-label="X" href="#"><svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg></a>
-      <a aria-label="LinkedIn" href="#"><svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5Zm.06 3.74H1.48v13.7h2.52v-13.7Zm6.85-4.94c-1.57 0-2.53.86-2.96 1.55v-1.34H5v13.7h2.41v-7.83c0-.41.03-.83.15-1.12.38-.92 1.25-1.88 2.71-1.88 1.91 0 2.67 1.41 2.67 3.48v7.35h2.42v-7.91c0-4.11-2.18-6.04-5.09-6.04z"/></svg></a>
-    </div>
-  </footer>
-
 <script>
 /* =========================================================
-   VISIBLE-ON-MOVE GRAY MESH + SMOOTH GROUP DISTORT
-   - Mesh (dots + links + base grid) appears only while moving
-   - Fades out immediately when pointer stops
-   - Title + subtitle distort as one unit
+   MESH ONLY WHILE MOVING  •  FAST IDLE FADE
+   - Mesh (dots + links + base grid) draws ONLY when pointer moves
+   - After ~80ms of no movement, mesh is hidden and effect fades quickly
+   - Title + subtitle distort smoothly as one unit; "learn more" stays steady
 ========================================================= */
 (function(){
   const canvas = document.getElementById('fx');
   const ctx = canvas.getContext('2d');
 
   /* ---------- Mesh appearance ---------- */
-  const DOT_RGB   = '120,120,120';   // darker gray
-  const GAP       = 42;              // grid spacing
-  const CLUSTER_N = 10;              // micro-dots per node
-  const CLUSTER_R = 5.5;             // cluster spread (px)
-  const MICRO_R   = [0.45, 1.0];     // micro-dot radius (px)
-  const DOT_ALPHA = 0.26;            // dot opacity (scaled by activity)
+  const DOT_RGB   = '120,120,120';
+  const GAP       = 42;
+  const CLUSTER_N = 10;
+  const CLUSTER_R = 5.5;
+  const MICRO_R   = [0.45, 1.0];
+  const DOT_ALPHA = 0.26;
 
   const DRAW_LINKS       = true;
   const LINK_ALPHA_BASE  = 0.14;
   const LINK_RADIUS      = 240;
 
-  // Faint base grid lines (also gated by activity)
-  const DRAW_BASE_GRID   = true;
+  const DRAW_BASE_GRID   = true;     // will be gated by movement
   const BASE_GRID_ALPHA  = 0.035;
   const BASE_GRID_STEP   = 1;
 
-  /* ---------- Physics (silky) ---------- */
+  /* ---------- Physics ---------- */
   const DAMP   = 0.978;
   const SPRING = 0.0065;
   const NOISE  = 0.004;
@@ -126,25 +37,28 @@
   const TANGENTIAL= 0.10;
   const ALONG     = 0.16;
 
-  /* ---------- Visibility gating ---------- */
+  /* ---------- Visibility & movement gating ---------- */
   let activity = 0;                   // 0..1
-  const MOVE_BOOST     = 0.16;
-  const SPEED_GAIN     = 0.55;
-  const ACTIVITY_DECAY = 0.012;       // faster fade the moment you stop
-  const IDLE_GRACE_MS  = 0;           // no delay before fading
-  const DEAD_EPS       = 0.05;        // hide completely when very low
+  const MOVE_BOOST      = 0.16;
+  const SPEED_GAIN      = 0.55;
+  const ACTIVITY_DECAY  = 0.012;      // normal decay
+  const ACTIVITY_DECAY_IDLE = 0.02;   // faster decay when fully idle
+  const DEAD_EPS        = 0.05;       // hide when below this threshold
+
+  let isMoving = false;               // hard gate for drawing
+  let idleTimer = null;
+  const IDLE_AFTER_MS = 80;           // how long after last move we consider idle
 
   /* ---------- State ---------- */
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
   let W=0, H=0, cols=0, rows=0;
   const nodes = [];
 
-  // Cursor + movement tracking
+  // Cursor + smoothing
   const cursor = { tx:null, ty:null, x:null, y:null, px:0, py:0, vx:0, vy:0 };
   const EASE = 0.12;
-  let lastMoveTs = performance.now();
 
-  // Copy group (title + subtitle) — critically damped spring
+  // Distorted copy group (title + subtitle)
   const copyGroup = document.getElementById('copyGroup');
   const G = { x:0, y:0, sx:1, sy:1, skew:0, blur:0,  vx:0, vy:0, vs:0, vsk:0, vb:0 };
 
@@ -169,11 +83,7 @@
         for(let k=0;k<CLUSTER_N;k++){
           const a = (k/CLUSTER_N)*Math.PI*2 + Math.random()*0.6;
           const rr = (CLUSTER_R*(0.55 + Math.random()*0.45));
-          cluster.push({
-            ox: Math.cos(a)*rr,
-            oy: Math.sin(a)*rr,
-            r:  (MICRO_R[0] + Math.random()*(MICRO_R[1]-MICRO_R[0]))
-          });
+          cluster.push({ ox: Math.cos(a)*rr, oy: Math.sin(a)*rr, r: (MICRO_R[0] + Math.random()*(MICRO_R[1]-MICRO_R[0])) });
         }
         nodes.push({ x, y, ox:x, oy:y, vx:0, vy:0, cluster });
       }
@@ -187,7 +97,7 @@
     const cx = cursor.x, cy = cursor.y;
     let tx=0, ty=0, tskew=0, ts=1, tblur=0;
 
-    if(cx != null){
+    if(cx != null && isMoving){
       const ex = rect.left + rect.width/2;
       const ey = rect.top  + rect.height/2;
       const dx = ex - cx, dy = ey - cy;
@@ -210,8 +120,10 @@
         tblur = Math.min(1.0, 0.8 * fall * activity);     // px
       }
     }
+    // If idle, aggressively relax blur to 0 so the text looks crisp
+    if(!isMoving){ tblur = 0; }
 
-    // Critically damped spring (realistic glide)
+    // Critically damped spring
     const zeta = 1.0, omega = 8.0, k = omega*omega, c = 2*zeta*omega;
     function spring(p, v, target){ const a = -k*(p-target) - c*v; v += a*dt; p += v*dt; return [p,v]; }
 
@@ -227,8 +139,7 @@
       `skew(${G.skew}deg, 0deg) ` +
       `scale(${G.sx}, ${G.sy})`;
 
-    // Blur only while there’s activity
-    copyGroup.style.filter = (activity > DEAD_EPS && G.blur > 0.03)
+    copyGroup.style.filter = (isMoving && activity > DEAD_EPS && G.blur > 0.03)
       ? `blur(${G.blur}px) contrast(${1 + 0.05*G.blur})`
       : 'none';
   }
@@ -250,22 +161,19 @@
       cursor.px = cursor.x; cursor.py = cursor.y;
     }
 
-    // Start fading immediately if idle
-    const idleMs = performance.now() - lastMoveTs;
-    if(idleMs > IDLE_GRACE_MS || cursor.tx == null){
-      activity = Math.max(0, activity - ACTIVITY_DECAY);
-    }
+    // If idle, decay faster
+    activity = Math.max(0, activity - (isMoving ? ACTIVITY_DECAY : ACTIVITY_DECAY_IDLE));
 
     ctx.clearRect(0,0,W,H);
 
-    // If fully idle, skip drawing mesh (hidden), but relax the group
-    if(activity <= DEAD_EPS){
+    // If not moving or too faint → hide mesh entirely, but still relax copyGroup
+    if(!isMoving || activity <= DEAD_EPS){
       updateCopyGroup(dt);
       requestAnimationFrame(step);
       return;
     }
 
-    // Otherwise draw with fade gate
+    // Draw with fade gate (only when moving)
     const gate = Math.pow(activity, 1.15);
     const infl2 = INFL_R*INFL_R;
     const link2 = LINK_RADIUS*LINK_RADIUS;
@@ -279,18 +187,16 @@
       n.vx += (n.ox - n.x) * SPRING;
       n.vy += (n.oy - n.y) * SPRING;
 
-      if(cursor.x != null){
-        const dx = (n.x/dpr - cursor.x);
-        const dy = (n.y/dpr - cursor.y);
-        const d2 = dx*dx + dy*dy;
-        if(d2 < infl2){
-          const fall = Math.exp(-d2/(2*infl2));
-          const rlen = Math.max(1e-6, Math.hypot(dx,dy));
-          const rx = dx/rlen, ry = dy/rlen;
-          const mag = PUSH * fall * dpr;
-          n.vx += (rx*RADIAL + txv*TANGENTIAL + ux*ALONG) * mag;
-          n.vy += (ry*RADIAL + tyv*TANGENTIAL + uy*ALONG) * mag;
-        }
+      const dx = (n.x/dpr - cursor.x);
+      const dy = (n.y/dpr - cursor.y);
+      const d2 = dx*dx + dy*dy;
+      if(d2 < infl2){
+        const fall = Math.exp(-d2/(2*infl2));
+        const rlen = Math.max(1e-6, Math.hypot(dx,dy));
+        const rx = dx/rlen, ry = dy/rlen;
+        const mag = PUSH * fall * dpr;
+        n.vx += (rx*RADIAL + txv*TANGENTIAL + ux*ALONG) * mag;
+        n.vy += (ry*RADIAL + tyv*TANGENTIAL + uy*ALONG) * mag;
       }
 
       n.vx += (Math.random()-0.5)*NOISE;
@@ -300,7 +206,7 @@
       n.x  += n.vx; n.y  += n.vy;
     }
 
-    // Base grid (gated by activity)
+    // Base grid (draw only when moving)
     if(DRAW_BASE_GRID){
       ctx.lineWidth = (dpr>1?0.6:0.8);
       ctx.strokeStyle = `rgba(${DOT_RGB},${BASE_GRID_ALPHA * gate})`;
@@ -334,7 +240,7 @@
     }
 
     // Links near cursor
-    if(DRAW_LINKS && cursor.x != null){
+    if(DRAW_LINKS){
       ctx.lineWidth = (dpr>1?0.9:1.1);
       for(let j=0;j<rows;j++){
         for(let i=0;i<cols;i++){
@@ -366,15 +272,18 @@
     requestAnimationFrame(step);
   }
 
-  /* ---------- Input: pointer (works on touchpads/touch) ---------- */
+  /* ---------- Input: explicit movement detection ---------- */
   window.addEventListener('pointermove', (e)=>{
     cursor.tx = e.clientX; cursor.ty = e.clientY;
-    lastMoveTs = performance.now();
+    isMoving = true;
+    if(idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(()=>{ isMoving = false; }, IDLE_AFTER_MS);
     activity = Math.min(1, activity + 0.14);
   }, {passive:true});
 
   window.addEventListener('pointerleave', ()=>{
-    cursor.tx = cursor.ty = null; // fade immediately
+    cursor.tx = cursor.ty = null;
+    isMoving = false; // hide immediately when leaving viewport
   }, {passive:true});
 
   /* ---------- Init ---------- */
@@ -396,5 +305,3 @@
   })();
 })();
 </script>
-</body>
-</html>
