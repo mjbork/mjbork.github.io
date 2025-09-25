@@ -1,338 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ORJM</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" />
-<style>
-  :root{ --bg:#fbfbf9; --fg:#111; --muted:#666; }
-  *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
-  html,body{ height:100%; }
-  body{ font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--fg); overflow-x:hidden; }
-
-  .nav{
-    position:fixed; top:1.2rem; right:2.4rem; z-index:3;
-    display:flex; gap:1.4rem; font-size:.78rem; font-weight:500; letter-spacing:.02em; text-transform:lowercase;
-  }
-  .nav a{ color:var(--fg); text-decoration:none; transition:opacity .2s; }
-  .nav a:hover{ opacity:.7; }
-
-  .hero{
-    position:relative; z-index:1; min-height:100vh;
-    display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 2rem;
-  }
-  .hero h1{ font-size:clamp(2.6rem,6.2vw,4.6rem); font-weight:500; text-transform:lowercase; margin-bottom:.7rem; }
-  .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
-  .roles{ font-size:.98rem; color:var(--muted); max-width:48rem; text-wrap:balance; }
-  .btn{
-    margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.9rem;
-    border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
-    text-decoration:none; text-transform:lowercase; display:inline-block; transition:background .2s,color .2s,transform .2s;
-  }
-  .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
-
-  footer{ position:fixed; bottom:1.2rem; left:0; right:0; display:flex; justify-content:center; z-index:1; }
-  .socials{ display:flex; gap:1.45rem; align-items:center; }
-  .socials a{ color:#7a7a7a; display:inline-flex; transition:opacity .2s, transform .2s; }
-  .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
-  .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
-
-  .orb{
-    position:absolute; z-index:1; left:50%; top:50%; translate:-50% -50%;
-    width:min(60vw,660px); aspect-ratio:1/1; border-radius:50%;
-    background: radial-gradient(closest-side, rgba(0,0,0,.06), rgba(0,0,0,.04) 35%, rgba(0,0,0,.02) 65%, rgba(0,0,0,0) 80%);
-    filter:blur(.2px); pointer-events:none;
-  }
-
-  .fx-canvas{ position:fixed; inset:0; z-index:0; pointer-events:none; }
-
-  #copyGroup{ will-change:transform, filter; display:inline-block; transform-origin:center; }
-
-  /* Tiny error overlay if something throws */
-  #errOverlay{
-    position:fixed; bottom:.5rem; left:.5rem; max-width:90vw;
-    background:#000; color:#fff; font:12px/1.3 monospace;
-    padding:.5rem .6rem; border-radius:.4rem; opacity:.9; z-index:9999; display:none; white-space:pre-wrap;
-  }
-
-  @media(max-width:640px){
-    .nav{ right:1rem; gap:1rem; font-size:.72rem; }
-    .roles{ font-size:.9rem; }
-  }
-</style>
-</head>
-<body>
-  <div id="errOverlay"></div>
-  <canvas id="fx" class="fx-canvas" aria-hidden="true"></canvas>
-
-  <nav class="nav" aria-label="Primary">
-    <a href="about.html">about</a>
-    <a href="campaigns.html">campaigns</a>
-    <a href="reel.html">reel</a>
-    <a href="contact.html">contact</a>
-  </nav>
-
-  <section class="hero" id="home">
-    <div class="orb" id="orb" aria-hidden="true"></div>
-
-    <div id="copyGroup" aria-label="orjm and roles">
-      <h1 class="cursive">orjm</h1>
-      <p class="roles">creative strategist · ai-driven video · brand consultant</p>
-    </div>
-
-    <a id="learn" class="btn" href="learn-more.html">learn more</a>
-  </section>
-
-  <footer>
-    <div class="socials">
-      <a aria-label="YouTube" href="#"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg></a>
-      <a aria-label="Discord" href="#"><svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/></svg></a>
-      <a aria-label="X" href="#"><svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg></a>
-      <a aria-label="LinkedIn" href="#"><svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5Zm.06 3.74H1.48v13.7h2.52v-13.7Zm6.85-4.94c-1.57 0-2.53.86-2.96 1.55v-1.34H5v13.7h2.41v-7.83c0-.41.03-.83.15-1.12.38-.92 1.25-1.88 2.71-1.88 1.91 0 2.67 1.41 2.67 3.48v7.35h2.42v-7.91c0-4.11-2.18-6.04-5.09-6.04z"/></svg></a>
-    </div>
-  </footer>
-
 <script>
-/* ================== RUNTIME ERROR OVERLAY ================== */
+/* =========================================================
+   Hero Title: Typewriter Sequence (Random Order)
+   - Words type with "..." then delete
+   - Final word "ORJM" also types (no ellipsis) and stays
+========================================================= */
 (function(){
-  const box = document.getElementById('errOverlay');
-  const show = (msg)=>{ box.style.display='block'; box.textContent = msg; };
-  window.addEventListener('error', e=> show('JS error: ' + e.message));
-  window.addEventListener('unhandledrejection', e=> show('Promise error: ' + (e.reason && e.reason.message || e.reason)));
-})();
-</script>
+  const target = document.getElementById('typeTarget');
+  if(!target) return;
 
-<script>
-/* ================== CHAIN-LINK MESH (visible on move) + SMOOTH DISTORT ================== */
-(function(){
-  const canvas = document.getElementById('fx');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if(!ctx) return;
+  // Words to shuffle through (will type with "...")
+  const phrases = ["Signal", "Originality", "Alchemy", "Continuum", "Resonance", "Vision"];
 
-  /* --- Config (safe, simple) --- */
-  const DOT_RGB = '120,120,120';
-  const GAP = 44;                // grid spacing (px)
-  const DOT_R = 0.9;             // base dot radius (px)
-  const DOT_ALPHA = 0.35;        // dot opacity (scaled by activity)
-  const LINK_ALPHA = 0.18;       // link opacity (scaled)
-
-  const INFLUENCE_R = 190;       // cursor influence radius
-  const SPRING = 0.008;          // return force
-  const DAMP = 0.976;            // damping
-  const NOISE = 0.003;           // tiny noise for life
-
-  // Visibility (fade-out when idle)
-  let activity = 0;
-  const MOVE_BOOST = 0.16;
-  const SPEED_GAIN = 0.55;
-  const DECAY_MOVING = 0.002;
-  const DECAY_IDLE   = 0.008;
-  const DEAD_EPS = 0.045;
-
-  // Movement gate: only draw mesh while moving (after 70–100ms idle = off)
-  let isMoving = false;
-  let idleTimer = 0;
-  const IDLE_AFTER_MS = 90;
-
-  // Canvas & grid
-  let dpr = Math.min(window.devicePixelRatio || 1, 2);
-  let W = 0, H = 0, cols = 0, rows = 0;
-  let nodes = []; // {x,y,ox,oy,vx,vy}
-
-  // Cursor (smoothed)
-  const cursor = { tx:null, ty:null, x:0, y:0, px:0, py:0, vx:0, vy:0 };
-  const EASE = 0.13;
-
-  // Distort group
-  const copyGroup = document.getElementById('copyGroup');
-  const G = { x:0, y:0, skew:0, blur:0, vx:0, vy:0, vsk:0, vb:0 };
-
-  function resize(){
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = canvas.width = Math.max(1, Math.floor(window.innerWidth * dpr));
-    H = canvas.height = Math.max(1, Math.floor(window.innerHeight * dpr));
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-
-    nodes = [];
-    cols = Math.ceil(window.innerWidth / GAP) + 2;
-    rows = Math.ceil(window.innerHeight / GAP) + 2;
-
-    for(let j=0;j<rows;j++){
-      for(let i=0;i<cols;i++){
-        const x = (i*GAP + (j%2? GAP/2 : 0)) * dpr;
-        const y = (j*GAP + 20) * dpr;
-        nodes.push({ x, y, ox:x, oy:y, vx:0, vy:0 });
-      }
-    }
+  // Shuffle once per load (Fisher–Yates)
+  for (let i = phrases.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [phrases[i], phrases[j]] = [phrases[j], phrases[i]];
   }
 
-  function updateCopy(dt){
-    if(!copyGroup) return;
-    const r = copyGroup.getBoundingClientRect();
-    const cx = cursor.x, cy = cursor.y;
-    let tx = 0, ty = 0, tskew = 0, tblur = 0;
-    if(isMoving){
-      const ex = r.left + r.width/2;
-      const ey = r.top  + r.height/2;
-      const dx = ex - cx, dy = ey - cy;
-      const R = 260;
-      const d2 = dx*dx + dy*dy;
-      if(d2 < R*R){
-        const fall = Math.exp(-d2/(2*R*R));
-        const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
-        const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
-        const len = Math.max(1e-6, Math.hypot(dx,dy));
-        const rx = dx/len, ry = dy/len;
-        const maxShift = 10;
-        tx = (rx*0.7 + ux*0.3) * maxShift * fall * activity;
-        ty = (ry*0.7 + uy*0.3) * maxShift * fall * activity;
-        tskew = (ux*ry - uy*rx) * 3.0 * fall * activity;
-        tblur = Math.min(0.9, 0.7 * fall * activity);
+  const TYPE_MS  = 58;   // per character typing speed
+  const HOLD_MS  = 700;  // hold after finishing a word (with "...")
+  const CLEAR_MS = 34;   // per character deletion speed
+
+  target.classList.add('caret'); // blinking caret
+
+  function typeText(text, withEllipsis, holdMs, done){
+    target.textContent = "";
+    let i = 0;
+    const full = withEllipsis ? (text + "...") : text;
+    const id = setInterval(()=>{
+      target.textContent = full.slice(0, i++);
+      if (i > full.length) {
+        clearInterval(id);
+        if (holdMs && holdMs > 0) {
+          setTimeout(()=> done && done(), holdMs);
+        } else {
+          done && done();
+        }
       }
-    }
-    // critically damped spring toward targets
-    const zeta=1, omega=8, k=omega*omega, c=2*zeta*omega;
-    function spring(p,v,target){ const a = -k*(p-target) - c*v; v += a*dt; p += v*dt; return [p,v]; }
-
-    [G.x, G.vx]   = spring(G.x, G.vx, tx);
-    [G.y, G.vy]   = spring(G.y, G.vy, ty);
-    [G.skew,G.vsk]= spring(G.skew,G.vsk, tskew);
-    [G.blur,G.vb] = spring(G.blur,G.vb, tblur);
-
-    copyGroup.style.transform = `translate3d(${G.x}px, ${G.y}px, 0) skew(${G.skew}deg,0)`;
-    copyGroup.style.filter = (isMoving && activity>DEAD_EPS && G.blur>0.02) ? `blur(${G.blur}px)` : 'none';
+    }, TYPE_MS);
   }
 
-  function frame(ts){
-    try{
-      if(!frame.t0) frame.t0 = ts;
-      const dt = Math.min(0.033, Math.max(0.001, (ts - frame.t0)/1000));
-      frame.t0 = ts;
-
-      // Cursor smoothing + activity
-      if(cursor.tx != null){
-        if(cursor.x === 0 && cursor.y === 0){ cursor.x = cursor.tx; cursor.y = cursor.ty; cursor.px=cursor.x; cursor.py=cursor.y; }
-        cursor.x += (cursor.tx - cursor.x) * EASE;
-        cursor.y += (cursor.ty - cursor.y) * EASE;
-        cursor.vx = cursor.x - cursor.px;
-        cursor.vy = cursor.y - cursor.py;
-        const vmag = Math.hypot(cursor.vx, cursor.vy);
-        activity = Math.min(1, activity + MOVE_BOOST + SPEED_GAIN * Math.min(1, vmag/28));
-        cursor.px = cursor.x; cursor.py = cursor.y;
+  function clearText(done){
+    const current = target.textContent;
+    let i = current.length;
+    const id = setInterval(()=>{
+      i--;
+      target.textContent = current.slice(0, i);
+      if (i <= 0) {
+        clearInterval(id);
+        done && done();
       }
-      // decay activity
-      activity = Math.max(0, activity - (isMoving ? DECAY_MOVING : DECAY_IDLE));
+    }, CLEAR_MS);
+  }
 
-      ctx.clearRect(0,0,W,H);
+  function runSequence(list){
+    let idx = 0;
 
-      // If idle or too faint, skip mesh drawing but still relax text
-      if(!isMoving || activity <= DEAD_EPS){
-        updateCopy(dt);
-        requestAnimationFrame(frame);
+    function next(){
+      if (idx >= list.length) {
+        // Final: type "ORJM" (no ellipsis), then settle
+        typeText("ORJM", /*withEllipsis=*/false, /*holdMs=*/0, ()=>{
+          target.classList.remove('caret'); // stop blinking after final type
+        });
         return;
       }
 
-      const gate = Math.pow(activity, 1.1);
-      const infl2 = (INFLUENCE_R*INFLUENCE_R);
-      const ux = cursor.vx === 0 && cursor.vy === 0 ? 0 : cursor.vx / Math.hypot(cursor.vx,cursor.vy);
-      const uy = cursor.vy === 0 && cursor.vx === 0 ? 0 : cursor.vy / Math.hypot(cursor.vx,cursor.vy);
-
-      // Update & draw grid
-      ctx.lineWidth = (dpr>1?0.8:1);
-      ctx.strokeStyle = `rgba(${DOT_RGB},${LINK_ALPHA*gate})`;
-      const colsMinus1 = cols - 1, rowsMinus1 = rows - 1;
-
-      for(let j=0;j<rows;j++){
-        for(let i=0;i<cols;i++){
-          const idx = j*cols + i;
-          const n = nodes[idx];
-
-          // spring back to origin
-          n.vx += (n.ox - n.x) * SPRING;
-          n.vy += (n.oy - n.y) * SPRING;
-
-          // cursor push
-          const dx = (n.x/dpr - cursor.x);
-          const dy = (n.y/dpr - cursor.y);
-          const d2 = dx*dx + dy*dy;
-          if(d2 < infl2){
-            const fall = Math.exp(-d2/(2*infl2));
-            const len = Math.max(1e-6, Math.hypot(dx,dy));
-            const rx = dx/len, ry = dy/len;
-            const tangx = -uy, tangy = ux; // perpendicular to motion
-            const push = 0.32 * fall * dpr;
-            n.vx += (rx*0.6 + tangx*0.1 + ux*0.16) * push;
-            n.vy += (ry*0.6 + tangy*0.1 + uy*0.16) * push;
-          }
-
-          // tiny noise
-          n.vx += (Math.random()-0.5)*NOISE;
-          n.vy += (Math.random()-0.5)*NOISE;
-
-          // integrate
-          n.vx *= DAMP; n.vy *= DAMP;
-          n.x += n.vx;  n.y += n.vy;
-
-          // draw dot
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, DOT_R*dpr, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(${DOT_RGB},${DOT_ALPHA*gate})`;
-          ctx.fill();
-
-          // draw links (right & down)
-          if(i < colsMinus1){
-            const b = nodes[idx+1];
-            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-          }
-          if(j < rowsMinus1){
-            const b = nodes[idx+cols];
-            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-          }
-        }
-      }
-
-      updateCopy(dt);
-      requestAnimationFrame(frame);
-    }catch(e){
-      const box = document.getElementById('errOverlay');
-      if(box){ box.style.display='block'; box.textContent = 'Loop error: ' + e.message; }
-      requestAnimationFrame(frame); // keep trying
+      typeText(list[idx], /*withEllipsis=*/true, HOLD_MS, ()=>{
+        clearText(()=>{
+          idx++;
+          next();
+        });
+      });
     }
+
+    next();
   }
 
-  // Input: use pointer events, fall back to mouse
-  function onMove(e){
-    cursor.tx = e.clientX; cursor.ty = e.clientY;
-    isMoving = true;
-    if(idleTimer) clearTimeout(idleTimer);
-    idleTimer = setTimeout(()=>{ isMoving = false; }, IDLE_AFTER_MS);
-    activity = Math.min(1, activity + 0.14);
-  }
-  window.addEventListener('pointermove', onMove, {passive:true});
-  window.addEventListener('mousemove', onMove, {passive:true}); // fallback
-  window.addEventListener('pointerleave', ()=>{ cursor.tx = cursor.ty = null; isMoving = false; }, {passive:true});
-
-  // Init
-  window.addEventListener('resize', resize);
-  resize();
-  requestAnimationFrame(frame);
-
-  // Keep orb centered under the copy group
-  (function keepOrb(){
-    const orb=document.getElementById('orb'), hero=document.getElementById('home'), copy=document.getElementById('copyGroup');
-    function center(){
-      if(!orb||!copy||!hero) return;
-      const r=copy.getBoundingClientRect(), h=hero.getBoundingClientRect();
-      orb.style.left = (r.left + r.width/2 - h.left) + 'px';
-      orb.style.top  = (r.top  + r.height/2 - h.top ) + 'px';
-    }
-    window.addEventListener('load', center);
-    window.addEventListener('resize', () => requestAnimationFrame(center));
-  })();
+  // Kick off after a small delay so layout is ready
+  setTimeout(()=> runSequence(phrases), 120);
 })();
 </script>
-</body>
-</html>
