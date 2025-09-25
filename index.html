@@ -1,288 +1,170 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ORJM</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
-  <style>
-    :root{
-      --bg-bone:#fdfbf7;     /* whiter off-white */
-      --text-dark:#111111;
-      --text-muted:#666666;
-      --dot-base:#d9d6cf;
-      --dot-strong:#bfb9ae;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
-    body{
-      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      background:var(--bg-bone);
-      color:var(--text-dark);
-      scroll-behavior:smooth;
-      overflow-x:hidden;
-    }
+<script>
+  /* =========================
+     INTERACTIVE DOT FIELD (v2)
+     - Dots invisible at rest
+     - Bloom near a smoothed cursor
+     - Trail is wider + slower/smoother
+     ========================= */
+  (function(){
+    const canvas = document.getElementById('fx');
+    const ctx = canvas.getContext('2d');
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let W, H, dots = [], sparks = [];
 
-    /* Canvas background (reactive dots; invisible when idle) */
-    .fx-canvas{
-      position:fixed; inset:0; z-index:0; pointer-events:none;
-    }
+    // Smoothed cursor (target tx/ty -> rendered x/y)
+    const cursor = { tx:-1e9, ty:-1e9, x:-1e9, y:-1e9, vx:0, vy:0 };
+    let activity = 0; // 0..1
 
-    /* Navigation */
-    .nav{
-      position:absolute; top:1.2rem; right:2.4rem; z-index:2;
-      display:flex; gap:1.4rem; font-size:.78rem; font-weight:500; letter-spacing:.02em;
-    }
-    .nav a{ color:var(--text-dark); text-decoration:none; text-transform:lowercase; transition:opacity .2s, transform .2s; }
-    .nav a:hover{ opacity:.7; transform:translateY(-1px); }
+    const CFG = {
+      gap: 48,
+      baseSize: 2.1,
+      maxRadius: 120,     // influence radius base (before dpr)
+      jitter: 0.7,
+      repel: 0.11,
 
-    /* Hero */
-    .hero{
-      position:relative; z-index:1; min-height:100vh;
-      display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;
-      padding:0 2rem;
-    }
-    .hero h1{
-      font-size:clamp(2.1rem,5vw,3.5rem);
-      font-weight:500; text-transform:lowercase; user-select:none;
-      transition:transform .15s ease, text-shadow .15s ease;
-      will-change:transform, text-shadow;
-      text-shadow:0 0 0 rgba(0,0,0,0);
-    }
-    .hero .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
-
-    .roles{
-      margin-top:.7rem; font-size:.9rem; color:var(--text-muted); max-width:45rem;
-      opacity:0; transform:translateY(20px); transition:opacity .8s ease, transform .8s ease;
-    }
-
-    .btn{
-      margin-top:1.8rem; padding:.7rem 1.8rem; font-size:.82rem;
-      color:var(--text-dark); background:transparent; border:1px solid var(--text-dark);
-      border-radius:.34rem; text-decoration:none; text-transform:lowercase; display:inline-block;
-      transition:transform .2s ease, background .2s, color .2s; position:relative;
-    }
-    .btn:hover{ background:var(--text-dark); color:var(--bg-bone); transform:scale(1.05); }
-
-    footer{ position:absolute; bottom:1.2rem; width:100%; display:flex; justify-content:center; z-index:1; }
-    .socials{ display:flex; gap:1.45rem; align-items:center; opacity:0; transform:translateY(20px); transition:opacity .8s ease, transform .8s ease; }
-    .socials a{ color:var(--text-muted); display:inline-flex; transition:transform .2s ease, opacity .2s; }
-    .socials a:hover{ opacity:.9; transform:scale(1.18) rotate(4deg); }
-    .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
-
-    @media(max-width:640px){
-      .nav{ right:1rem; gap:1rem; font-size:.72rem; }
-      .roles{ font-size:.8rem; }
-    }
-  </style>
-</head>
-<body>
-  <!-- Reactive dots (only near cursor) -->
-  <canvas class="fx-canvas" id="fx"></canvas>
-
-  <nav class="nav">
-    <a href="about.html">about</a>
-    <a href="campaigns.html">campaigns</a>
-    <a href="reel.html">reel</a>
-    <a href="contact.html">contact</a>
-  </nav>
-
-  <section class="hero" id="home">
-    <h1 id="heroTitle"><span class="cursive">orjm</span></h1>
-    <p class="roles" id="roles">strategist · ai-driven video · brand consultant</p>
-    <a href="learn-more.html" class="btn">learn more</a>
-  </section>
-
-  <footer>
-    <div class="socials" id="socials">
-      <a aria-label="YouTube" href="#"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg></a>
-      <a aria-label="Discord" href="#"><svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/></svg></a>
-      <a aria-label="X" href="#"><svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg></a>
-      <a aria-label="LinkedIn" href="#"><svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5Zm.06 3.74H1.48v13.7h2.52v-13.7Zm6.85-4.94c-1.57 0-2.53.86-2.96 1.55v-1.34H5v13.7h2.41v-7.83c0-.41.03-.83.15-1.12.38-.92 1.25-1.88 2.71-1.88 1.91 0 2.67 1.41 2.67 3.48v7.35h2.42v-7.91c0-4.11-2.18-6.04-5.09-6.04z"/></svg></a>
-    </div>
-  </footer>
-
-  <script>
-    /* =========================
-       HERO TITLE: tilt + shadow
-       ========================= */
-    const title = document.getElementById('heroTitle');
-    document.addEventListener('mousemove', (e) => {
-      const { innerWidth:w, innerHeight:h } = window;
-      const x = (e.clientX / w - 0.5) * 20;
-      const y = (e.clientY / h - 0.5) * -20;
-      title.style.transform = `rotateX(${y}deg) rotateY(${x}deg)`;
-      title.style.textShadow = `${-x/2}px ${y/2}px 12px rgba(0,0,0,0.22)`;
-    });
-    document.addEventListener('mouseleave', () => {
-      title.style.transform = 'rotateX(0deg) rotateY(0deg)';
-      title.style.textShadow = '0 0 0 rgba(0,0,0,0)';
-    });
-
-    /* =========================
-       SCROLL REVEAL (roles + socials)
-       ========================= */
-    const reveal = (el) => {
-      const obs = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.style.opacity = 1;
-            entry.target.style.transform = 'translateY(0)';
-            obs.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.2 });
-      obs.observe(el);
+      // Trail tuning (wider, slower, smoother)
+      sparkRate: 4,       // fewer per event (less “firework”)
+      sparkLife: 950,     // longer life => slower fade
+      sparkSpread: 36,    // radial spread range
+      sparkOffset: 10,    // minimum offset from cursor
+      sparkDamping: 0.985,
+      sparkGravity: 0.004
     };
-    reveal(document.getElementById('roles'));
-    reveal(document.getElementById('socials'));
 
-    /* =========================
-       INTERACTIVE DOT FIELD
-       - Invisible at rest
-       - Only renders near cursor
-       - Slight randomness + spark trail
-       ========================= */
-    (function(){
-      const canvas = document.getElementById('fx');
-      const ctx = canvas.getContext('2d');
-      let dpr = Math.min(window.devicePixelRatio || 1, 2);
-      let W, H, dots = [], sparks = [];
-      const mouse = {x:-1e9, y:-1e9, vx:0, vy:0, lastX:-1e9, lastY:-1e9};
-      let activity = 0; // 0..1 – decays when idle
+    function resize(){
+      W = canvas.width = Math.floor(innerWidth * dpr);
+      H = canvas.height = Math.floor(innerHeight * dpr);
+      canvas.style.width = innerWidth+'px';
+      canvas.style.height = innerHeight+'px';
+      initDots();
+    }
 
-      const CFG = {
-        gap: 48,            // grid spacing
-        baseSize: 2.2,      // max dot radius
-        maxRadius: 120,     // base cursor influence radius
-        jitter: 0.7,        // wander
-        repel: 0.12,        // push strength
-        sparkRate: 5,       // sparks per move event
-        sparkLife: 600,     // ms
-      };
-
-      function resize(){
-        W = canvas.width = Math.floor(innerWidth * dpr);
-        H = canvas.height = Math.floor(innerHeight * dpr);
-        canvas.style.width = innerWidth+'px';
-        canvas.style.height = innerHeight+'px';
-        initDots();
+    function initDots(){
+      dots = [];
+      const cols = Math.ceil(innerWidth / CFG.gap) + 2;
+      const rows = Math.ceil(innerHeight / CFG.gap) + 2;
+      for(let y=0;y<rows;y++){
+        for(let x=0;x<cols;x++){
+          const px = (x*CFG.gap + (y%2? CFG.gap/2:0)) * dpr;
+          const py = (y*CFG.gap + 20) * dpr;
+          dots.push({ x:px, y:py, ox:px, oy:py, vx:0, vy:0, n: Math.random()*1000 });
+        }
       }
+    }
 
-      function initDots(){
-        dots = [];
-        const cols = Math.ceil(innerWidth / CFG.gap) + 2;
-        const rows = Math.ceil(innerHeight / CFG.gap) + 2;
-        for(let y=0;y<rows;y++){
-          for(let x=0;x<cols;x++){
-            const px = (x*CFG.gap + (y%2? CFG.gap/2:0)) * dpr;
-            const py = (y*CFG.gap + 20) * dpr;
-            // give each dot a tiny unique noise phase
-            dots.push({x:px, y:py, ox:px, oy:py, vx:0, vy:0, n: Math.random()*1000});
+    function addSparks(mx,my, speed=0.4){
+      for(let i=0;i<CFG.sparkRate;i++){
+        // spawn around cursor with radial offset so it’s not a pinpoint
+        const theta = Math.random()*Math.PI*2;
+        const r0 = CFG.sparkOffset + Math.random()*CFG.sparkSpread;
+        const px = (mx + Math.cos(theta)*r0) * dpr;
+        const py = (my + Math.sin(theta)*r0) * dpr;
+
+        // lower initial speed, spread outward, slight upward bias removed
+        const vmag = Math.random()*(speed*0.6) + 0.18;
+        const vx = Math.cos(theta)*vmag;
+        const vy = Math.sin(theta)*vmag;
+
+        sparks.push({
+          x:px, y:py, vx, vy,
+          life: CFG.sparkLife,
+          born: performance.now(),
+          size: Math.random()*1.1 + 0.7
+        });
+      }
+    }
+
+    function step(ts){
+      ctx.clearRect(0,0,W,H);
+
+      // Smooth the cursor to make motion fluid
+      if(cursor.x === -1e9){ cursor.x = cursor.tx; cursor.y = cursor.ty; }
+      cursor.x += (cursor.tx - cursor.x) * 0.15;
+      cursor.y += (cursor.ty - cursor.y) * 0.15;
+
+      // Activity decays when idle
+      activity = Math.max(0, activity - 0.012);
+
+      const radius = (CFG.maxRadius + Math.sin(ts/900)*16 + Math.cos(ts/700)*10) * dpr;
+
+      // Dots (only drawn near cursor, and only if active)
+      if(activity > 0.05){
+        for(const p of dots){
+          // gentle return to origin + tiny wander
+          const dx0 = p.ox - p.x, dy0 = p.oy - p.y;
+          p.vx += dx0 * 0.002 + (Math.sin(p.n + ts*0.001)-0.5)*CFG.jitter*0.01;
+          p.vy += dy0 * 0.002 + (Math.cos(p.n + ts*0.001)-0.5)*CFG.jitter*0.01;
+
+          // repel from smoothed cursor
+          const dx = p.x - cursor.x, dy = p.y - cursor.y;
+          const dist = Math.hypot(dx,dy);
+          if(dist < radius){
+            const f = (1 - dist/radius) * CFG.repel * (0.7 + activity*0.6);
+            p.vx += (dx/dist || 0) * f * 3.0;
+            p.vy += (dy/dist || 0) * f * 3.0;
           }
-        }
-      }
 
-      function addSparks(mx,my, speed=0.5){
-        for(let i=0;i<CFG.sparkRate;i++){
-          const a = Math.random()*Math.PI*2;
-          const r = Math.random()*14 + 2;
-          sparks.push({
-            x: mx*dpr, y: my*dpr,
-            vx: Math.cos(a)*r*speed, vy: Math.sin(a)*r*speed - Math.random()*0.6,
-            life: CFG.sparkLife, born: performance.now(),
-            size: Math.random()*1.2 + 0.6
-          });
-        }
-      }
-
-      function step(ts){
-        ctx.clearRect(0,0,W,H);
-
-        // decay activity (influences visibility)
-        activity = Math.max(0, activity - 0.015);
-
-        // randomize radius a touch over time for unpredictability
-        const radius = (CFG.maxRadius + Math.sin(ts/900)*18 + Math.cos(ts/700)*12) * dpr;
-
-        // draw dots only if some activity
-        if(activity > 0.05){
-          for(const p of dots){
-            // gentle return to origin + tiny wander
-            const dx0 = p.ox - p.x, dy0 = p.oy - p.y;
-            p.vx += dx0 * 0.002 + (Math.sin(p.n + ts*0.001)-0.5)*CFG.jitter*0.01;
-            p.vy += dy0 * 0.002 + (Math.cos(p.n + ts*0.001)-0.5)*CFG.jitter*0.01;
-
-            // repel from cursor
-            const dx = p.x - mouse.x*dpr, dy = p.y - mouse.y*dpr;
-            const dist = Math.hypot(dx,dy);
-            if(dist < radius){
-              const f = (1 - dist/radius) * CFG.repel * (0.7 + activity*0.6);
-              p.vx += (dx/dist || 0) * f * 3.2;
-              p.vy += (dy/dist || 0) * f * 3.2;
-            }
-
-            // damping & integrate
-            p.vx *= 0.96; p.vy *= 0.96;
-            p.x += p.vx;  p.y += p.vy;
-
-            // draw only near cursor; size/alpha scale by proximity & activity
-            if(dist < radius){
-              const near = 1 - dist/radius;                 // 0..1
-              const s = CFG.baseSize * (near*0.9 + 0.2) * activity;
-              if(s > 0.15){
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, s*dpr, 0, Math.PI*2);
-                const alpha = 0.15 + near*0.45*activity;
-                ctx.fillStyle = `rgba(191,185,174,${alpha})`; // stronger near cursor
-                ctx.fill();
-              }
-            }
-          }
-        }
-
-        // draw spark particles (independent of activity for a lively feel)
-        const now = ts;
-        for(let i=sparks.length-1;i>=0;i--){
-          const sp = sparks[i];
-          const age = now - sp.born;
-          if(age > sp.life){ sparks.splice(i,1); continue; }
           // integrate
-          sp.vy += 0.01; // slight gravity
-          sp.x += sp.vx; sp.y += sp.vy;
-          const t = 1 - age/sp.life;
-          ctx.beginPath();
-          ctx.arc(sp.x, sp.y, sp.size*dpr*t, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(191,185,174,${0.35 * t})`;
-          ctx.fill();
-        }
+          p.vx *= 0.965; p.vy *= 0.965;
+          p.x += p.vx;    p.y += p.vy;
 
-        requestAnimationFrame(step);
+          // draw only if near cursor (size/alpha scale by proximity & activity)
+          if(dist < radius){
+            const near = 1 - dist/radius; // 0..1
+            const s = CFG.baseSize * (near*0.85 + 0.25) * activity;
+            if(s > 0.12){
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, s*dpr, 0, Math.PI*2);
+              const alpha = 0.12 + near*0.38*activity;
+              ctx.fillStyle = `rgba(191,185,174,${alpha})`;
+              ctx.fill();
+            }
+          }
+        }
       }
 
-      window.addEventListener('mousemove', e => {
-        // compute velocity to gauge activity strength
-        if(mouse.lastX !== -1e9){
-          mouse.vx = e.clientX - mouse.lastX;
-          mouse.vy = e.clientY - mouse.lastY;
-        }
-        mouse.lastX = mouse.x = e.clientX;
-        mouse.lastY = mouse.y = e.clientY;
+      // Sparks (wider, slower)
+      const now = ts;
+      for(let i=sparks.length-1;i>=0;i--){
+        const sp = sparks[i];
+        const age = now - sp.born;
+        if(age > sp.life){ sparks.splice(i,1); continue; }
 
-        // bump activity based on movement magnitude
-        const mag = Math.min(1, Math.hypot(mouse.vx, mouse.vy)/40);
-        activity = Math.min(1, activity + 0.2 + mag*0.6);
+        sp.vy += CFG.sparkGravity;             // gentle gravity
+        sp.vx *= CFG.sparkDamping;             // smooth damping
+        sp.vy *= CFG.sparkDamping;
+        sp.x  += sp.vx;
+        sp.y  += sp.vy;
 
-        // spawn a few sparks at cursor
-        addSparks(e.clientX, e.clientY, 0.35 + mag*0.4);
-      }, {passive:true});
+        const t = 1 - age/sp.life;             // 1..0
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, sp.size*dpr*(0.8 + 0.2*t), 0, Math.PI*2);
+        ctx.fillStyle = `rgba(191,185,174,${0.28 * t})`;
+        ctx.fill();
+      }
 
-      window.addEventListener('mouseleave', () => { mouse.x = -1e9; mouse.y = -1e9; });
-
-      window.addEventListener('resize', resize);
-      resize();
       requestAnimationFrame(step);
-    })();
-  </script>
-</body>
-</html>
+    }
+
+    // Mouse events → update target cursor (smoothed later) + spawn sparks
+    window.addEventListener('mousemove', e => {
+      // velocity magnitude for activity bump
+      const vx = e.movementX || 0, vy = e.movementY || 0;
+      const mag = Math.min(1, Math.hypot(vx, vy)/36);
+      activity = Math.min(1, activity + 0.18 + mag*0.55);
+
+      cursor.tx = e.clientX * dpr;
+      cursor.ty = e.clientY * dpr;
+
+      addSparks(e.clientX, e.clientY, 0.32 + mag*0.35);
+    }, {passive:true});
+
+    window.addEventListener('mouseleave', () => {
+      cursor.tx = cursor.ty = -1e9;
+    });
+
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(step);
+  })();
+</script>
