@@ -11,7 +11,6 @@
   html,body{ height:100%; }
   body{ font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--fg); overflow-x:hidden; }
 
-  /* Nav */
   .nav{
     position:fixed; top:1.2rem; right:2.4rem; z-index:3;
     display:flex; gap:1.4rem; font-size:.78rem; font-weight:500; letter-spacing:.02em; text-transform:lowercase;
@@ -19,16 +18,13 @@
   .nav a{ color:var(--fg); text-decoration:none; transition:opacity .2s; }
   .nav a:hover{ opacity:.7; }
 
-  /* Hero */
   .hero{
     position:relative; z-index:1; min-height:100vh;
     display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 2rem;
   }
-  .hero h1{
-    font-size:clamp(2.4rem,6vw,4.2rem); font-weight:500; text-transform:lowercase; margin-bottom:.7rem;
-  }
+  .hero h1{ font-size:clamp(2.6rem,6.2vw,4.6rem); font-weight:500; text-transform:lowercase; margin-bottom:.7rem; }
   .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
-  .roles{ font-size:.95rem; color:var(--muted); max-width:45rem; text-wrap:balance; }
+  .roles{ font-size:.98rem; color:var(--muted); max-width:48rem; text-wrap:balance; }
   .btn{
     margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.9rem;
     border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
@@ -36,14 +32,12 @@
   }
   .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
 
-  /* Footer */
   footer{ position:fixed; bottom:1.2rem; left:0; right:0; display:flex; justify-content:center; z-index:1; }
   .socials{ display:flex; gap:1.45rem; align-items:center; }
   .socials a{ color:#7a7a7a; display:inline-flex; transition:opacity .2s, transform .2s; }
   .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
   .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
-  /* Soft orb */
   .orb{
     position:absolute; z-index:1; left:50%; top:50%; translate:-50% -50%;
     width:min(60vw,660px); aspect-ratio:1/1; border-radius:50%;
@@ -51,19 +45,14 @@
     filter:blur(.2px); pointer-events:none;
   }
 
-  /* Mesh canvas */
   .fx-canvas{ position:fixed; inset:0; z-index:0; pointer-events:none; }
 
-  /* Distort as a single block */
-  #copyGroup{
-    will-change:transform, filter;
-    display:inline-block;
-    transform-origin:center;
-  }
+  /* Distort “orjm + subtitle” as one unit */
+  #copyGroup{ will-change:transform, filter; display:inline-block; transform-origin:center; }
 
   @media(max-width:640px){
     .nav{ right:1rem; gap:1rem; font-size:.72rem; }
-    .roles{ font-size:.86rem; }
+    .roles{ font-size:.9rem; }
   }
 </style>
 </head>
@@ -80,13 +69,11 @@
   <section class="hero" id="home">
     <div class="orb" id="orb" aria-hidden="true"></div>
 
-    <!-- One group to distort (title + subtitle together) -->
     <div id="copyGroup" aria-label="orjm and roles">
       <h1 class="cursive">orjm</h1>
-      <p class="roles">strategist · ai-driven video · brand consultant</p>
+      <p class="roles">creative strategist · ai-driven video · brand consultant</p>
     </div>
 
-    <!-- "learn more" stays stable -->
     <a id="learn" class="btn" href="learn-more.html" aria-label="learn more">learn more</a>
   </section>
 
@@ -101,36 +88,41 @@
 
 <script>
 /* =========================================================
-   GRAY CHAIN-LINK (clusters) + GROUP DISTORT (title + subtitle)
-   - Mesh fades out smoothly at rest
-   - "learn more" unaffected
-   - Whole copy block distorts smoothly (translate/skew/scale + soft blur)
+   VISUAL MESH (denser, more visible) + SMOOTH GROUP DISTORT
+   - Gray chain-link made of tight dot clusters
+   - Faint base grid lines for readability
+   - Critically-damped spring for realistic copy distortion
 ========================================================= */
 (function(){
   const canvas = document.getElementById('fx');
   const ctx = canvas.getContext('2d');
   if(!ctx) return;
 
-  /* ---------- Mesh visuals (gray) ---------- */
-  const DOT_RGB   = '150,150,150';
-  const GAP       = 46;
-  const CLUSTER_N = 8;
-  const CLUSTER_R = 5;
-  const MICRO_R   = [0.35, 0.9];
-  const DOT_ALPHA = 0.18;
+  /* ---------- Mesh appearance (more visible) ---------- */
+  const DOT_RGB   = '120,120,120';   // darker gray
+  const GAP       = 42;              // denser grid
+  const CLUSTER_N = 10;              // more micro-dots per node
+  const CLUSTER_R = 5.5;             // cluster spread (px)
+  const MICRO_R   = [0.45, 1.0];     // micro-dot radius (px)
+  const DOT_ALPHA = 0.26;            // stronger dots while moving
 
-  const DRAW_LINKS      = true;
-  const LINK_ALPHA_BASE = 0.06;
-  const LINK_RADIUS     = 210;
+  const DRAW_LINKS       = true;
+  const LINK_ALPHA_BASE  = 0.14;     // stronger lines near cursor
+  const LINK_RADIUS      = 240;      // larger link radius
 
-  /* ---------- Physics ---------- */
-  const DAMP   = 0.974;
-  const SPRING = 0.008;
-  const NOISE  = 0.006;
+  // Faint base grid lines (always extremely subtle)
+  const DRAW_BASE_GRID   = true;
+  const BASE_GRID_ALPHA  = 0.035;    // very subtle
+  const BASE_GRID_STEP   = 1;        // connect immediate neighbors
 
-  // Cursor influence
-  const INFL_R    = 190;
-  const PUSH      = 0.30;
+  /* ---------- Physics (smoother) ---------- */
+  const DAMP   = 0.978;  // higher = silkier
+  const SPRING = 0.0065; // softer return
+  const NOISE  = 0.004;  // less shimmer = cleaner
+
+  // Cursor influence (pressing the mesh)
+  const INFL_R    = 210;
+  const PUSH      = 0.34;
   const RADIAL    = 0.60;
   const TANGENTIAL= 0.10;
   const ALONG     = 0.16;
@@ -139,7 +131,7 @@
   let activity = 0;
   const MOVE_BOOST     = 0.16;
   const SPEED_GAIN     = 0.55;
-  const ACTIVITY_DECAY = 0.0075;
+  const ACTIVITY_DECAY = 0.0065; // slower fade-out → smoother
 
   /* ---------- State ---------- */
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -147,11 +139,11 @@
   const nodes = [];
 
   const cursor = { tx:null, ty:null, x:null, y:null, px:0, py:0, vx:0, vy:0 };
-  const EASE = 0.14;
+  const EASE = 0.12;
 
-  // Copy group (title + subtitle) distortion state
+  // Copy group (title + subtitle) — critically damped spring
   const copyGroup = document.getElementById('copyGroup');
-  const groupState = { x:0, y:0, sx:1, sy:1, skew:0, blur:0, tx:0, ty:0, tsx:1, tsy:1, tskew:0, tblur:0 };
+  const G = { x:0, y:0, sx:1, sy:1, skew:0, blur:0,  vx:0, vy:0, vs:0, vsk:0, vb:0 };
 
   function resize(){
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -180,76 +172,80 @@
             r:  (MICRO_R[0] + Math.random()*(MICRO_R[1]-MICRO_R[0]))
           });
         }
-
         nodes.push({ x, y, ox:x, oy:y, vx:0, vy:0, cluster });
       }
     }
   }
 
-  function updateCopyGroup(){
-    const el = copyGroup;
-    if(!el) return;
+  function updateCopyGroup(dt){
+    if(!copyGroup) return;
 
-    // compute target transform based on cursor proximity/motion
-    const rect = el.getBoundingClientRect();
+    const rect = copyGroup.getBoundingClientRect();
     const cx = cursor.x, cy = cursor.y;
-    let shiftX = 0, shiftY = 0, skew = 0, scale = 1, blur = 0;
+
+    // Desired (target) transform from cursor pressure
+    let tx=0, ty=0, tskew=0, ts=1, tblur=0;
 
     if(cx != null){
       const ex = rect.left + rect.width/2;
       const ey = rect.top  + rect.height/2;
-      const dx = ex - cx;
-      const dy = ey - cy;
-      const r  = 260; // influence radius (px)
+      const dx = ex - cx, dy = ey - cy;
+      const R  = 300; // influence radius
       const d2 = dx*dx + dy*dy;
 
-      if(d2 < r*r){
-        const fall = Math.exp(-d2/(2*r*r));
+      if(d2 < R*R){
+        const fall = Math.exp(-d2/(2*R*R));
         const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
-        const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
+        const ux = cursor.vx/vmag, uy = cursor.vy/vmag;   // along motion
         const len = Math.max(1e-6, Math.hypot(dx,dy));
-        const rx = dx/len, ry = dy/len;
+        const rx = dx/len, ry = dy/len;                   // radial away
 
-        // target translation (mostly radial, slightly along motion)
-        const maxShift = 12; // px
-        shiftX = (rx*0.7 + ux*0.3) * maxShift * fall * activity;
-        shiftY = (ry*0.7 + uy*0.3) * maxShift * fall * activity;
+        const maxShift = 14;  // px
+        tx = (rx*0.7 + ux*0.3) * maxShift * fall * activity;
+        ty = (ry*0.7 + uy*0.3) * maxShift * fall * activity;
 
-        // gentle skew and scale to feel like pressure
-        skew  = (ux*ry - uy*rx) * 4 * fall * activity; // degrees
-        scale = 1 + 0.015 * fall * activity;           // up to +1.5%
-        blur  = Math.min(1.2, 0.9 * fall * activity);  // px
+        tskew = (ux*ry - uy*rx) * 3.2 * fall * activity;  // deg (subtler)
+        ts    = 1 + 0.012 * fall * activity;              // up to +1.2%
+        tblur = Math.min(1.0, 0.8 * fall * activity);     // px
       }
     }
 
-    // set targets
-    groupState.tx   = shiftX;
-    groupState.ty   = shiftY;
-    groupState.tsx  = scale;
-    groupState.tsy  = 1/scale; // counter-scale to keep weight stable
-    groupState.tskew= skew;
-    groupState.tblur= blur;
+    // Critically-damped spring integration (feels realistic)
+    const zeta = 1.0;      // damping ratio (1 = critical)
+    const omega = 8.0;     // natural freq (higher = snappier)
+    const k = omega*omega;
+    const c = 2*zeta*omega;
 
-    // ease toward targets (super smooth)
-    const ease = 0.12;
-    groupState.x    += (groupState.tx   - groupState.x)    * ease;
-    groupState.y    += (groupState.ty   - groupState.y)    * ease;
-    groupState.sx   += (groupState.tsx  - groupState.sx)   * ease;
-    groupState.sy   += (groupState.tsy  - groupState.sy)   * ease;
-    groupState.skew += (groupState.tskew- groupState.skew) * ease;
-    groupState.blur += (groupState.tblur- groupState.blur) * ease;
+    function spring(statePos, stateVel, target){
+      const a = -k*(statePos - target) - c*stateVel;
+      stateVel += a * dt;
+      statePos += stateVel * dt;
+      return [statePos, stateVel];
+    }
 
-    el.style.transform =
-      `translate3d(${groupState.x}px, ${groupState.y}px, 0) ` +
-      `skew(${groupState.skew}deg, 0deg) ` +
-      `scale(${groupState.sx}, ${groupState.sy})`;
-    el.style.filter = groupState.blur > 0.02
-      ? `blur(${groupState.blur}px) contrast(${1 + 0.06*groupState.blur})`
+    [G.x, G.vx] = spring(G.x, G.vx, tx);
+    [G.y, G.vy] = spring(G.y, G.vy, ty);
+    [G.skew, G.vsk] = spring(G.skew, G.vsk, tskew);
+    [G.sx, G.vs] = spring(G.sx, G.vs, ts);
+    // keep vertical scale reciprocal to preserve weight
+    G.sy = 1 / G.sx;
+    [G.blur, G.vb] = spring(G.blur, G.vb, tblur);
+
+    copyGroup.style.transform =
+      `translate3d(${G.x}px, ${G.y}px, 0) ` +
+      `skew(${G.skew}deg, 0deg) ` +
+      `scale(${G.sx}, ${G.sy})`;
+    copyGroup.style.filter = G.blur > 0.03
+      ? `blur(${G.blur}px) contrast(${1 + 0.05*G.blur})`
       : 'none';
   }
 
-  function step(){
-    // Smooth cursor + velocity
+  function step(ts){
+    if(!step.t0) step.t0 = ts;
+    const dt = Math.min(0.033, (ts - step.t0)/1000); // clamp to ~30 FPS step
+    step.t0 = ts;
+
+    // Cursor smoothing
     if(cursor.tx != null){
       if(cursor.x == null){ cursor.x = cursor.tx; cursor.y = cursor.ty; cursor.px = cursor.x; cursor.py = cursor.y; }
       cursor.x += (cursor.tx - cursor.x) * EASE;
@@ -265,13 +261,13 @@
     ctx.clearRect(0,0,W,H);
 
     // Precompute
-    const gate = Math.pow(activity, 1.2);
+    const gate = Math.pow(activity, 1.15);
     const infl2 = INFL_R*INFL_R;
     const link2 = LINK_RADIUS*LINK_RADIUS;
 
     const vmag = Math.hypot(cursor.vx, cursor.vy) || 1e-6;
     const ux = cursor.vx/vmag, uy = cursor.vy/vmag;
-    const tx = -uy, ty = ux;
+    const txv = -uy, tyv = ux;
 
     // Update nodes
     for(let n of nodes){
@@ -287,8 +283,8 @@
           const rlen = Math.max(1e-6, Math.hypot(dx,dy));
           const rx = dx/rlen, ry = dy/rlen;
           const mag = PUSH * fall * dpr;
-          n.vx += (rx*RADIAL + tx*TANGENTIAL + ux*ALONG) * mag;
-          n.vy += (ry*RADIAL + ty*TANGENTIAL + uy*ALONG) * mag;
+          n.vx += (rx*RADIAL + txv*TANGENTIAL + ux*ALONG) * mag;
+          n.vy += (ry*RADIAL + tyv*TANGENTIAL + uy*ALONG) * mag;
         }
       }
 
@@ -299,7 +295,27 @@
       n.x  += n.vx; n.y  += n.vy;
     }
 
-    // Draw clusters
+    // Faint base grid lines (always on, very subtle)
+    if(DRAW_BASE_GRID){
+      ctx.lineWidth = (dpr>1?0.6:0.8);
+      ctx.strokeStyle = `rgba(${DOT_RGB},${BASE_GRID_ALPHA})`;
+      for(let j=0;j<rows;j++){
+        for(let i=0;i<cols;i++){
+          const id = j*cols + i;
+          const a = nodes[id];
+          if(i+BASE_GRID_STEP < cols){
+            const b = nodes[id+BASE_GRID_STEP];
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+          if(j+BASE_GRID_STEP < rows){
+            const b = nodes[id+BASE_GRID_STEP*cols];
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+        }
+      }
+    }
+
+    // Draw clusters (dots) while moving
     if(gate > 0.002){
       for(let n of nodes){
         for(let m of n.cluster){
@@ -314,9 +330,9 @@
       }
     }
 
-    // Optional faint links
+    // Stronger links near cursor
     if(DRAW_LINKS && gate > 0.002 && cursor.x != null){
-      ctx.lineWidth = (dpr>1?0.75:1);
+      ctx.lineWidth = (dpr>1?0.9:1.1);
       for(let j=0;j<rows;j++){
         for(let i=0;i<cols;i++){
           const id = j*cols + i;
@@ -326,7 +342,7 @@
           const d2 = dx*dx + dy*dy;
           if(d2 > link2) continue;
           const w = Math.exp(-d2/(2*link2));
-          const alpha = LINK_ALPHA_BASE * gate * (0.6 + 0.4*w);
+          const alpha = LINK_ALPHA_BASE * gate * (0.7 + 0.3*w);
           ctx.strokeStyle = `rgba(${DOT_RGB},${alpha})`;
 
           if(i < cols-1){
@@ -341,8 +357,8 @@
       }
     }
 
-    // Distort the whole copy group (title + subtitle)
-    updateCopyGroup();
+    // Realistic, smooth group distortion
+    updateCopyGroup(dt);
 
     requestAnimationFrame(step);
   }
@@ -350,10 +366,10 @@
   // Input
   window.addEventListener('mousemove', (e)=>{
     cursor.tx = e.clientX; cursor.ty = e.clientY;
-    activity = Math.min(1, activity + 0.12);
+    activity = Math.min(1, activity + 0.14);
   }, {passive:true});
   window.addEventListener('mouseleave', ()=>{
-    cursor.tx = cursor.ty = null; // graceful fade
+    cursor.tx = cursor.ty = null; // graceful fade-out continues
   }, {passive:true});
 
   // Init
@@ -361,7 +377,7 @@
   resize();
   requestAnimationFrame(step);
 
-  // Keep orb centered under the wordmark
+  // Keep orb centered under the copy group
   (function keepOrb(){
     const orb=document.getElementById('orb'), hero=document.getElementById('home'), copy=document.getElementById('copyGroup');
     function center(){
