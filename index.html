@@ -7,12 +7,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
   <style>
     :root{
-      /* slightly whiter off-white */
-      --bg-bone:#fcfbf8;
+      --bg-bone:#fdfbf7;     /* whiter off-white */
       --text-dark:#111111;
       --text-muted:#666666;
-      --grid-dot:#d9d6cf;        /* dots base */
-      --grid-dot-strong:#bfb9ae; /* dots when close to cursor */
+      --dot-base:#d9d6cf;
+      --dot-strong:#bfb9ae;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
@@ -24,68 +23,61 @@
       overflow-x:hidden;
     }
 
-    /* Canvas background (interactive dots) */
+    /* Canvas background (reactive dots; invisible when idle) */
     .fx-canvas{
-      position:fixed;
-      inset:0;
-      z-index:0;
-      pointer-events:none; /* purely decorative */
+      position:fixed; inset:0; z-index:0; pointer-events:none;
     }
 
     /* Navigation */
     .nav{
-      position:absolute;top:1.2rem;right:2.4rem;z-index:2;
-      display:flex;gap:1.4rem;font-size:.78rem;font-weight:500;letter-spacing:.02em;
+      position:absolute; top:1.2rem; right:2.4rem; z-index:2;
+      display:flex; gap:1.4rem; font-size:.78rem; font-weight:500; letter-spacing:.02em;
     }
-    .nav a{
-      color:var(--text-dark);text-decoration:none;text-transform:lowercase;
-      transition:opacity .2s, transform .2s;
-    }
-    .nav a:hover{opacity:.7;transform:translateY(-1px)}
+    .nav a{ color:var(--text-dark); text-decoration:none; text-transform:lowercase; transition:opacity .2s, transform .2s; }
+    .nav a:hover{ opacity:.7; transform:translateY(-1px); }
 
     /* Hero */
     .hero{
-      position:relative;z-index:1;min-height:100vh;
-      display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+      position:relative; z-index:1; min-height:100vh;
+      display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;
       padding:0 2rem;
     }
     .hero h1{
       font-size:clamp(2.1rem,5vw,3.5rem);
-      font-weight:500;text-transform:lowercase;user-select:none;
+      font-weight:500; text-transform:lowercase; user-select:none;
       transition:transform .15s ease, text-shadow .15s ease;
-      will-change:transform,text-shadow;
+      will-change:transform, text-shadow;
       text-shadow:0 0 0 rgba(0,0,0,0);
     }
-    .hero .cursive{font-family:'Playfair Display',serif;font-style:italic}
+    .hero .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
 
     .roles{
-      margin-top:.7rem;font-size:.9rem;color:var(--text-muted);max-width:45rem;
-      opacity:0;transform:translateY(20px);transition:opacity .8s ease, transform .8s ease;
+      margin-top:.7rem; font-size:.9rem; color:var(--text-muted); max-width:45rem;
+      opacity:0; transform:translateY(20px); transition:opacity .8s ease, transform .8s ease;
     }
 
     .btn{
-      margin-top:1.8rem;padding:.7rem 1.8rem;font-size:.82rem;
-      color:var(--text-dark);background:transparent;border:1px solid var(--text-dark);
-      border-radius:.34rem;text-decoration:none;text-transform:lowercase;display:inline-block;
-      transition:transform .2s ease, background .2s, color .2s;
-      position:relative;
+      margin-top:1.8rem; padding:.7rem 1.8rem; font-size:.82rem;
+      color:var(--text-dark); background:transparent; border:1px solid var(--text-dark);
+      border-radius:.34rem; text-decoration:none; text-transform:lowercase; display:inline-block;
+      transition:transform .2s ease, background .2s, color .2s; position:relative;
     }
-    .btn:hover{background:var(--text-dark);color:var(--bg-bone);transform:scale(1.05)}
+    .btn:hover{ background:var(--text-dark); color:var(--bg-bone); transform:scale(1.05); }
 
-    footer{position:absolute;bottom:1.2rem;width:100%;display:flex;justify-content:center;z-index:1}
-    .socials{display:flex;gap:1.45rem;align-items:center;opacity:0;transform:translateY(20px);transition:opacity .8s ease, transform .8s ease;}
-    .socials a{color:var(--text-muted);display:inline-flex;transition:transform .2s ease, opacity .2s}
-    .socials a:hover{opacity:.9;transform:scale(1.18) rotate(4deg)}
-    .socials svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5}
+    footer{ position:absolute; bottom:1.2rem; width:100%; display:flex; justify-content:center; z-index:1; }
+    .socials{ display:flex; gap:1.45rem; align-items:center; opacity:0; transform:translateY(20px); transition:opacity .8s ease, transform .8s ease; }
+    .socials a{ color:var(--text-muted); display:inline-flex; transition:transform .2s ease, opacity .2s; }
+    .socials a:hover{ opacity:.9; transform:scale(1.18) rotate(4deg); }
+    .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
     @media(max-width:640px){
-      .nav{right:1rem;gap:1rem;font-size:.72rem}
-      .roles{font-size:.8rem}
+      .nav{ right:1rem; gap:1rem; font-size:.72rem; }
+      .roles{ font-size:.8rem; }
     }
   </style>
 </head>
 <body>
-  <!-- Interactive dots background -->
+  <!-- Reactive dots (only near cursor) -->
   <canvas class="fx-canvas" id="fx"></canvas>
 
   <nav class="nav">
@@ -147,19 +139,26 @@
 
     /* =========================
        INTERACTIVE DOT FIELD
+       - Invisible at rest
+       - Only renders near cursor
+       - Slight randomness + spark trail
        ========================= */
     (function(){
       const canvas = document.getElementById('fx');
       const ctx = canvas.getContext('2d');
       let dpr = Math.min(window.devicePixelRatio || 1, 2);
-      let W, H, dots = [], mouse = {x:-1e9, y:-1e9};
+      let W, H, dots = [], sparks = [];
+      const mouse = {x:-1e9, y:-1e9, vx:0, vy:0, lastX:-1e9, lastY:-1e9};
+      let activity = 0; // 0..1 – decays when idle
 
       const CFG = {
-        gap: 46,             // spacing between dots
-        jitter: 0.7,         // tiny random drift
-        repelRadius: 130,    // cursor influence
-        repelForce: 0.12,    // how strongly dots move away
-        size: 2.2            // dot radius
+        gap: 48,            // grid spacing
+        baseSize: 2.2,      // max dot radius
+        maxRadius: 120,     // base cursor influence radius
+        jitter: 0.7,        // wander
+        repel: 0.12,        // push strength
+        sparkRate: 5,       // sparks per move event
+        sparkLife: 600,     // ms
       };
 
       function resize(){
@@ -172,57 +171,117 @@
 
       function initDots(){
         dots = [];
-        const cols = Math.ceil(innerWidth / CFG.gap)+2;
-        const rows = Math.ceil(innerHeight / CFG.gap)+2;
+        const cols = Math.ceil(innerWidth / CFG.gap) + 2;
+        const rows = Math.ceil(innerHeight / CFG.gap) + 2;
         for(let y=0;y<rows;y++){
           for(let x=0;x<cols;x++){
-            const px = (x*CFG.gap + (y%2? CFG.gap/2:0)) * dpr; // stagger rows
+            const px = (x*CFG.gap + (y%2? CFG.gap/2:0)) * dpr;
             const py = (y*CFG.gap + 20) * dpr;
-            dots.push({x:px, y:py, ox:px, oy:py, vx:0, vy:0});
+            // give each dot a tiny unique noise phase
+            dots.push({x:px, y:py, ox:px, oy:py, vx:0, vy:0, n: Math.random()*1000});
           }
         }
       }
 
-      function step(){
+      function addSparks(mx,my, speed=0.5){
+        for(let i=0;i<CFG.sparkRate;i++){
+          const a = Math.random()*Math.PI*2;
+          const r = Math.random()*14 + 2;
+          sparks.push({
+            x: mx*dpr, y: my*dpr,
+            vx: Math.cos(a)*r*speed, vy: Math.sin(a)*r*speed - Math.random()*0.6,
+            life: CFG.sparkLife, born: performance.now(),
+            size: Math.random()*1.2 + 0.6
+          });
+        }
+      }
+
+      function step(ts){
         ctx.clearRect(0,0,W,H);
-        for(const p of dots){
-          // gentle return to origin
-          const dx0 = p.ox - p.x, dy0 = p.oy - p.y;
-          p.vx += dx0 * 0.002;
-          p.vy += dy0 * 0.002;
 
-          // cursor repel
-          const dx = p.x - mouse.x*dpr, dy = p.y - mouse.y*dpr;
-          const dist = Math.hypot(dx,dy);
-          if(dist < CFG.repelRadius*dpr){
-            const f = (1 - dist/(CFG.repelRadius*dpr)) * CFG.repelForce;
-            p.vx += (dx/dist || 0) * f * 3.2;
-            p.vy += (dy/dist || 0) * f * 3.2;
+        // decay activity (influences visibility)
+        activity = Math.max(0, activity - 0.015);
+
+        // randomize radius a touch over time for unpredictability
+        const radius = (CFG.maxRadius + Math.sin(ts/900)*18 + Math.cos(ts/700)*12) * dpr;
+
+        // draw dots only if some activity
+        if(activity > 0.05){
+          for(const p of dots){
+            // gentle return to origin + tiny wander
+            const dx0 = p.ox - p.x, dy0 = p.oy - p.y;
+            p.vx += dx0 * 0.002 + (Math.sin(p.n + ts*0.001)-0.5)*CFG.jitter*0.01;
+            p.vy += dy0 * 0.002 + (Math.cos(p.n + ts*0.001)-0.5)*CFG.jitter*0.01;
+
+            // repel from cursor
+            const dx = p.x - mouse.x*dpr, dy = p.y - mouse.y*dpr;
+            const dist = Math.hypot(dx,dy);
+            if(dist < radius){
+              const f = (1 - dist/radius) * CFG.repel * (0.7 + activity*0.6);
+              p.vx += (dx/dist || 0) * f * 3.2;
+              p.vy += (dy/dist || 0) * f * 3.2;
+            }
+
+            // damping & integrate
+            p.vx *= 0.96; p.vy *= 0.96;
+            p.x += p.vx;  p.y += p.vy;
+
+            // draw only near cursor; size/alpha scale by proximity & activity
+            if(dist < radius){
+              const near = 1 - dist/radius;                 // 0..1
+              const s = CFG.baseSize * (near*0.9 + 0.2) * activity;
+              if(s > 0.15){
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, s*dpr, 0, Math.PI*2);
+                const alpha = 0.15 + near*0.45*activity;
+                ctx.fillStyle = `rgba(191,185,174,${alpha})`; // stronger near cursor
+                ctx.fill();
+              }
+            }
           }
+        }
 
-          // light jitter
-          p.vx += (Math.random()-0.5)*CFG.jitter*0.02;
-          p.vy += (Math.random()-0.5)*CFG.jitter*0.02;
-
-          // damping
-          p.vx *= 0.96; p.vy *= 0.96;
-          p.x += p.vx;  p.y += p.vy;
-
-          // draw
-          const near = dist < CFG.repelRadius*dpr ? 1 - dist/(CFG.repelRadius*dpr) : 0;
+        // draw spark particles (independent of activity for a lively feel)
+        const now = ts;
+        for(let i=sparks.length-1;i>=0;i--){
+          const sp = sparks[i];
+          const age = now - sp.born;
+          if(age > sp.life){ sparks.splice(i,1); continue; }
+          // integrate
+          sp.vy += 0.01; // slight gravity
+          sp.x += sp.vx; sp.y += sp.vy;
+          const t = 1 - age/sp.life;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, CFG.size*dpr, 0, Math.PI*2);
-          ctx.fillStyle = near>0 ? `rgba(191,185,174,${0.35+near*0.35})` : `rgba(217,214,207,0.45)`;
+          ctx.arc(sp.x, sp.y, sp.size*dpr*t, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(191,185,174,${0.35 * t})`;
           ctx.fill();
         }
+
         requestAnimationFrame(step);
       }
 
-      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; }, {passive:true});
+      window.addEventListener('mousemove', e => {
+        // compute velocity to gauge activity strength
+        if(mouse.lastX !== -1e9){
+          mouse.vx = e.clientX - mouse.lastX;
+          mouse.vy = e.clientY - mouse.lastY;
+        }
+        mouse.lastX = mouse.x = e.clientX;
+        mouse.lastY = mouse.y = e.clientY;
+
+        // bump activity based on movement magnitude
+        const mag = Math.min(1, Math.hypot(mouse.vx, mouse.vy)/40);
+        activity = Math.min(1, activity + 0.2 + mag*0.6);
+
+        // spawn a few sparks at cursor
+        addSparks(e.clientX, e.clientY, 0.35 + mag*0.4);
+      }, {passive:true});
+
       window.addEventListener('mouseleave', () => { mouse.x = -1e9; mouse.y = -1e9; });
+
       window.addEventListener('resize', resize);
       resize();
-      step();
+      requestAnimationFrame(step);
     })();
   </script>
 </body>
