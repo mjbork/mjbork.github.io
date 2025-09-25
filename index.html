@@ -1,178 +1,280 @@
-<script>
-/* =========================================================
-   MICRO-DOTS: HOOK & DRAG — VISIBLE ONLY WHEN MOVING
-   - Dots fade in with motion, fade out when idle
-   - Hook nearest dot and drag it; neighbors follow
-   ========================================================= */
-(function(){
-  const canvas = document.getElementById('fx');
-  const ctx = canvas.getContext('2d');
-  let dpr = Math.min(window.devicePixelRatio || 1, 2);
-  let W, H, dots = [];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ORJM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
+  <style>
+    :root{ --bg:#fcfbf8; --fg:#111; --muted:#666; }
+    *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+    html,body{ height:100%; }
+    body{ font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--fg); overflow-x:hidden; }
 
-  /* --------- Visual + layout --------- */
-  let gap = 52;                 // spacing (bigger = more dispersed)
-  let baseAlpha = 0.22;         // baseline visibility (will be scaled by activity)
-  const color = '191,185,174';  // warm grey
-  const RMIN = 1.0, RMAX = 1.6; // dot radius range (CSS px)
+    .nav{
+      position:fixed; top:1.2rem; right:2.4rem; z-index:3;
+      display:flex; gap:1.4rem; font-size:.78rem; font-weight:500; letter-spacing:.02em; text-transform:lowercase;
+    }
+    .nav a{ color:var(--fg); text-decoration:none; transition:opacity .2s; }
+    .nav a:hover{ opacity:.7; }
 
-  /* --------- Physics --------- */
-  const DAMP   = 0.93;   // viscosity
-  const SPRING = 0.010;  // return to origin
-  const NOISE  = 0.02;   // tiny organic jitter
+    .hero{
+      position:relative; z-index:1; min-height:100vh;
+      display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 2rem;
+    }
+    .hero h1{ position:relative; z-index:2; font-size:clamp(2.1rem,5vw,3.8rem); font-weight:500; text-transform:lowercase; }
+    .cursive{ font-family:'Playfair Display',serif; font-style:italic; }
+    .roles{ margin-top:.7rem; font-size:.95rem; color:var(--muted); max-width:45rem; text-wrap:balance; }
+    .btn{
+      margin-top:1.8rem; padding:.72rem 1.8rem; font-size:.85rem;
+      border:1px solid var(--fg); border-radius:.34rem; color:var(--fg);
+      text-decoration:none; text-transform:lowercase; display:inline-block;
+      transition:background .2s,color .2s,transform .2s;
+    }
+    .btn:hover{ background:var(--fg); color:var(--bg); transform:translateY(-1px); }
 
-  // Hook behavior
-  const FOLLOW_RADIUS   = 190;  // how far neighbors feel the leader (px)
-  const FOLLOW_STRENGTH = 0.11; // neighbor pull strength
-  const LEADER_STRENGTH = 0.44; // leader snaps to cursor
-  const HOOK_RADIUS     = 110;  // max distance to hook a leader (px)
+    footer{ position:fixed; bottom:1.2rem; left:0; right:0; display:flex; justify-content:center; z-index:1; }
+    .socials{ display:flex; gap:1.45rem; align-items:center; }
+    .socials a{ color:#7a7a7a; display:inline-flex; transition:opacity .2s, transform .2s; }
+    .socials a:hover{ opacity:.9; transform:scale(1.12) rotate(3deg); }
+    .socials svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; }
 
-  /* --------- Visibility (motion-activated) --------- */
-  let activity = 0;            // 0..1 (drives opacity & hooking)
-  const MOVE_BOOST = 0.28;     // how much a move bumps activity
-  const SPEED_GAIN = 0.6;      // extra boost from fast motion
-  const ACTIVITY_DECAY = 0.015;// per frame decay (lower = lingers longer)
-  const ACTIVE_EPS = 0.03;     // below this, treat as idle
+    /* Gentle orb behind the wordmark */
+    .orb{
+      position:absolute; z-index:1; left:50%; top:50%; translate:-50% -50%;
+      width:min(60vw,660px); aspect-ratio:1/1; border-radius:50%;
+      background: radial-gradient(closest-side, rgba(0,0,0,.06), rgba(0,0,0,.04) 35%, rgba(0,0,0,.02) 65%, rgba(0,0,0,0) 80%);
+      filter:blur(.2px); pointer-events:none;
+    }
 
-  /* --------- Smoothed cursor --------- */
-  const cursor = { tx:-1e9, ty:-1e9, x:-1e9, y:-1e9, px:-1e9, py:-1e9, vx:0, vy:0 };
-  const EASE = 0.18;
+    /* Micro-dot canvas behind content */
+    .fx-canvas{ position:fixed; inset:0; z-index:0; pointer-events:none; }
 
-  let leader = -1;
+    @media(max-width:640px){
+      .nav{ right:1rem; gap:1rem; font-size:.72rem; }
+      .roles{ font-size:.86rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fx" class="fx-canvas" aria-hidden="true"></canvas>
 
-  function resize(){
-    W = canvas.width  = Math.floor(innerWidth  * dpr);
-    H = canvas.height = Math.floor(innerHeight * dpr);
-    canvas.style.width  = innerWidth + 'px';
-    canvas.style.height = innerHeight + 'px';
-    buildDots();
-  }
+  <nav class="nav" aria-label="Primary">
+    <a href="about.html">about</a>
+    <a href="campaigns.html">campaigns</a>
+    <a href="reel.html">reel</a>
+    <a href="contact.html">contact</a>
+  </nav>
 
-  function buildDots(){
-    dots = [];
-    const gx = Math.ceil(innerWidth  / gap) + 2;
-    const gy = Math.ceil(innerHeight / gap) + 2;
-    for(let j=0;j<gy;j++){
-      for(let i=0;i<gx;i++){
-        const ox = (i*gap + (j%2 ? gap/2 : 0));
-        const oy = (j*gap + 20);
-        const x = ox * dpr, y = oy * dpr;
-        const r = (RMIN + Math.random()*(RMAX-RMIN)) * dpr;
-        dots.push({ x, y, ox:x, oy:y, vx:0, vy:0, r });
+  <section class="hero" id="home">
+    <div class="orb" id="orb" aria-hidden="true"></div>
+    <h1 id="title"><span class="cursive">orjm</span></h1>
+    <p class="roles">strategist · ai-driven video · brand consultant</p>
+    <a class="btn" href="learn-more.html">learn more</a>
+  </section>
+
+  <footer>
+    <div class="socials">
+      <a aria-label="YouTube" href="#"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg></a>
+      <a aria-label="Discord" href="#"><svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/></svg></a>
+      <a aria-label="X" href="#"><svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg></a>
+      <a aria-label="LinkedIn" href="#"><svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5Zm.06 3.74H1.48v13.7h2.52v-13.7Zm6.85-4.94c-1.57 0-2.53.86-2.96 1.55v-1.34H5v13.7h2.41v-7.83c0-.41.03-.83.15-1.12.38-.92 1.25-1.88 2.71-1.88 1.91 0 2.67 1.41 2.67 3.48v7.35h2.42v-7.91c0-4.11-2.18-6.04-5.09-6.04z"/></svg></a>
+    </div>
+  </footer>
+
+  <script>
+  // ================================
+  // MICRO-DOTS: HOOK & DRAG (visible only while moving)
+  // ================================
+  (function(){
+    const canvas = document.getElementById('fx');
+    const ctx = canvas.getContext('2d');
+    if(!ctx){ console.error('Canvas 2D context not available'); return; }
+
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let W = 0, H = 0, dots = [];
+
+    // Visual
+    let gap = 52;                 // spacing (bigger = more dispersed)
+    let baseAlpha = 0.22;         // baseline visibility (scaled by activity)
+    const color = '191,185,174';  // warm grey
+    const RMIN = 1.0, RMAX = 1.6; // dot radius range (CSS px)
+
+    // Physics
+    const DAMP   = 0.93;   // viscosity
+    const SPRING = 0.010;  // return to origin
+    const NOISE  = 0.02;   // micro jitter
+
+    // Hook behavior
+    const FOLLOW_RADIUS   = 190;     // neighbors feel leader (px)
+    const FOLLOW_STRENGTH = 0.11;    // neighbor pull
+    const LEADER_STRENGTH = 0.44;    // leader -> cursor
+    const HOOK_RADIUS     = 110;     // choose leader near cursor (px)
+
+    // Visibility control
+    let activity = 0;                // 0..1
+    const MOVE_BOOST = 0.28;
+    const SPEED_GAIN = 0.6;
+    const ACTIVITY_DECAY = 0.015;
+    const ACTIVE_EPS = 0.03;
+
+    // Smoothed cursor
+    const cursor = { tx:null, ty:null, x:null, y:null, px:0, py:0 };
+    const EASE = 0.18;
+
+    let leader = -1;
+    let lastT = 0;
+
+    function resize(){
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = canvas.width  = Math.floor(innerWidth  * dpr);
+      H = canvas.height = Math.floor(innerHeight * dpr);
+      canvas.style.width  = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      buildDots();
+    }
+
+    function buildDots(){
+      dots = [];
+      const gx = Math.ceil(innerWidth  / gap) + 2;
+      const gy = Math.ceil(innerHeight / gap) + 2;
+      for(let j=0;j<gy;j++){
+        for(let i=0;i<gx;i++){
+          const ox = (i*gap + (j%2 ? gap/2 : 0));
+          const oy = (j*gap + 20);
+          const x = ox * dpr, y = oy * dpr;
+          const r = (RMIN + Math.random()*(RMAX-RMIN)) * dpr;
+          dots.push({ x, y, ox:x, oy:y, vx:0, vy:0, r });
+        }
       }
     }
-  }
 
-  let lastT = 0;
-  function step(ts){
-    if(!lastT) lastT = ts;
-    const dt = Math.min(32, ts - lastT); // clamp for stability
-    lastT = ts;
+    function step(ts){
+      if(!lastT) lastT = ts;
+      const dt = Math.max(1, Math.min(32, ts - lastT));
+      lastT = ts;
 
-    // Smooth cursor
-    if(!isFinite(cursor.x)){ cursor.x = cursor.tx; cursor.y = cursor.ty; cursor.px = cursor.x; cursor.py = cursor.y; }
-    cursor.x += (cursor.tx - cursor.x) * EASE;
-    cursor.y += (cursor.ty - cursor.y) * EASE;
+      // Smooth cursor
+      if(cursor.tx == null || cursor.ty == null){
+        // no cursor yet → just render idle (faded to 0 anyway)
+      } else {
+        if(cursor.x == null){ cursor.x = cursor.tx; cursor.y = cursor.ty; cursor.px = cursor.x; cursor.py = cursor.y; }
+        cursor.x += (cursor.tx - cursor.x) * EASE;
+        cursor.y += (cursor.ty - cursor.y) * EASE;
+        const vx = (cursor.x - cursor.px);
+        const vy = (cursor.y - cursor.py);
+        const vmag = Math.hypot(vx, vy);
+        cursor.px = cursor.x; cursor.py = cursor.y;
 
-    // Compute smoothed velocity (for activity boost)
-    const vx = (cursor.x - cursor.px); const vy = (cursor.y - cursor.py);
-    const vmag = Math.hypot(vx, vy);
-    cursor.px = cursor.x; cursor.py = cursor.y;
+        // Bump activity on motion, then decay
+        activity = Math.min(1, activity + MOVE_BOOST + SPEED_GAIN * Math.min(1, vmag/28));
+      }
+      activity = Math.max(0, activity - ACTIVITY_DECAY);
 
-    // Update activity: boost from motion, then decay
-    activity = Math.max(0, Math.min(1, activity + MOVE_BOOST + SPEED_GAIN * Math.min(1, vmag/28)));
-    activity = Math.max(0, activity - ACTIVITY_DECAY);
+      ctx.clearRect(0,0,W,H);
 
-    // Clear frame
-    ctx.clearRect(0,0,W,H);
+      // Choose/update leader only if active & cursor exists
+      if(activity > ACTIVE_EPS && cursor.x != null){
+        let best=-1, bestD2=HOOK_RADIUS*HOOK_RADIUS;
+        for(let i=0;i<dots.length;i++){
+          const p = dots[i];
+          const dx = p.x/dpr - cursor.x, dy = p.y/dpr - cursor.y;
+          const d2 = dx*dx + dy*dy;
+          if(d2 < bestD2){ bestD2 = d2; best = i; }
+        }
+        leader = best;
+      } else {
+        leader = -1;
+      }
 
-    // Choose/update leader only if active
-    if(activity > ACTIVE_EPS && isFinite(cursor.tx)){
-      let best=-1, bestD2=HOOK_RADIUS*HOOK_RADIUS;
+      // Pull leader toward cursor
+      let lx=0, ly=0;
+      if(leader >= 0 && cursor.x != null){
+        const L = dots[leader];
+        lx = L.x; ly = L.y;
+        L.vx += (cursor.x*dpr - L.x) * LEADER_STRENGTH;
+        L.vy += (cursor.y*dpr - L.y) * LEADER_STRENGTH;
+      }
+
+      // Animate & draw dots
       for(let i=0;i<dots.length;i++){
         const p = dots[i];
-        const dx = p.x/dpr - cursor.x, dy = p.y/dpr - cursor.y;
-        const d2 = dx*dx + dy*dy;
-        if(d2 < bestD2){ bestD2 = d2; best = i; }
-      }
-      leader = best;
-    } else {
-      leader = -1;
-    }
 
-    // Pull leader toward cursor (when active)
-    let lx=0, ly=0;
-    if(leader >= 0){
-      const L = dots[leader];
-      lx = L.x; ly = L.y;
-      L.vx += (cursor.x*dpr - L.x) * LEADER_STRENGTH;
-      L.vy += (cursor.y*dpr - L.y) * LEADER_STRENGTH;
-    }
+        // spring back to origin
+        p.vx += (p.ox - p.x) * SPRING;
+        p.vy += (p.oy - p.y) * SPRING;
 
-    // Animate and draw dots
-    for(const p of dots){
-      // spring back to origin
-      p.vx += (p.ox - p.x) * SPRING;
-      p.vy += (p.oy - p.y) * SPRING;
+        // neighbors follow leader when active
+        if(leader >= 0 && i !== leader){
+          const dx = (lx - p.x), dy = (ly - p.y);
+          const dist = Math.hypot(dx, dy);
+          if(dist < FOLLOW_RADIUS*dpr){
+            const w = (1 - dist/(FOLLOW_RADIUS*dpr));
+            p.vx += dx * (FOLLOW_STRENGTH * w);
+            p.vy += dy * (FOLLOW_STRENGTH * w);
+            // gentle arc
+            p.vx += (-dy) * 0.0006 * w;
+            p.vy += ( dx) * 0.0006 * w;
+          }
+        }
 
-      // neighbors follow the leader when active
-      if(leader >= 0 && p !== dots[leader]){
-        const dx = (lx - p.x), dy = (ly - p.y);
-        const dist = Math.hypot(dx, dy);
-        if(dist < FOLLOW_RADIUS*dpr){
-          const w = (1 - dist/(FOLLOW_RADIUS*dpr));
-          p.vx += dx * (FOLLOW_STRENGTH * w);
-          p.vy += dy * (FOLLOW_STRENGTH * w);
-          // gentle tangential component for smooth arc
-          p.vx += (-dy) * 0.0006 * w;
-          p.vy += ( dx) * 0.0006 * w;
+        // tiny organic jitter
+        p.vx += (Math.random()-0.5) * NOISE;
+        p.vy += (Math.random()-0.5) * NOISE;
+
+        // integrate
+        p.vx *= DAMP; p.vy *= DAMP;
+        p.x  += p.vx; p.y  += p.vy;
+
+        // draw — opacity scaled by activity
+        const speed = Math.min(1, Math.hypot(p.vx, p.vy) / (1.0*dpr));
+        const a = (baseAlpha + speed*0.18) * activity;
+        if(a > 0.006){
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${color},${a})`;
+          ctx.fill();
         }
       }
 
-      // organic jitter
-      p.vx += (Math.random()-0.5) * NOISE;
-      p.vy += (Math.random()-0.5) * NOISE;
-
-      // integrate
-      p.vx *= DAMP; p.vy *= DAMP;
-      p.x  += p.vx; p.y  += p.vy;
-
-      // draw — opacity scaled by activity; a bit brighter when moving faster
-      const speed = Math.min(1, Math.hypot(p.vx, p.vy) / (1.0*dpr));
-      const a = (baseAlpha + speed*0.18) * activity;   // <- activity gates visibility
-      if(a > 0.004){ // skip near-zero to save fill calls
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(${color},${a})`;
-        ctx.fill();
-      }
+      requestAnimationFrame(step);
     }
 
+    // Mouse
+    window.addEventListener('mousemove', (e) => {
+      // initialize targets on first move
+      if(cursor.tx == null){ cursor.tx = e.clientX; cursor.ty = e.clientY; activity = 1; }
+      cursor.tx = e.clientX; cursor.ty = e.clientY;
+      activity = Math.min(1, activity + 0.2); // snappy reveal
+    }, {passive:true});
+
+    window.addEventListener('mouseleave', () => {
+      cursor.tx = cursor.ty = null; // stop choosing leader
+    }, {passive:true});
+
+    // Start
+    window.addEventListener('resize', resize);
+    resize();
     requestAnimationFrame(step);
-  }
+  })();
 
-  // Mouse → update target, and give an immediate activity kick per event
-  window.addEventListener('mousemove', (e) => {
-    cursor.tx = e.clientX;
-    cursor.ty = e.clientY;
-    activity = Math.min(1, activity + 0.15); // instant nudge so dots appear promptly
-  }, {passive:true});
-
-  window.addEventListener('mouseleave', () => {
-    cursor.tx = cursor.ty = -1e9;
-  }, {passive:true});
-
-  // Init
-  window.addEventListener('resize', resize);
-  resize();
-  requestAnimationFrame(step);
-
-  /* ========== Quick knobs ==========
-     gap: 48–58 (density)
-     baseAlpha: 0.18–0.28 (overall dot strength)
-     MOVE_BOOST / SPEED_GAIN: how quickly dots appear with motion
-     ACTIVITY_DECAY: 0.012–0.02 (how fast they fade at rest)
-     HOOK_RADIUS / LEADER_STRENGTH / FOLLOW_*: hook feel
-  */
-})();
-</script>
+  // Keep the orb centered beneath the wordmark
+  (function(){
+    const orb  = document.getElementById('orb');
+    const title= document.getElementById('title');
+    const hero = document.getElementById('home');
+    function centerOrb(){
+      if(!orb || !title || !hero) return;
+      const r = title.getBoundingClientRect();
+      const h = hero.getBoundingClientRect();
+      const cx = r.left + r.width/2 - h.left;
+      const cy = r.top  + r.height/2 - h.top;
+      orb.style.left = cx + 'px';
+      orb.style.top  = cy + 'px';
+    }
+    window.addEventListener('load', centerOrb);
+    window.addEventListener('resize', () => requestAnimationFrame(centerOrb));
+  })();
+  </script>
+</body>
+</html>
