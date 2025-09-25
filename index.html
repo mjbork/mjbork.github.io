@@ -8,8 +8,12 @@
 <style>
   :root{ --bg:#fbfbf9; --fg:#111; --muted:#666; }
   *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
-  html,body{ height:100%; }
-  body{ font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--fg); overflow-x:hidden; }
+  html,body{ height:100%; overscroll-behavior: none; }
+  body{
+    font-family:'Inter',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--fg);
+    overflow-x:hidden;
+  }
 
   .nav{
     position:fixed; top:1.2rem; right:2.4rem; z-index:3;
@@ -54,9 +58,22 @@
 
   /* Canvas for mesh */
   .fx-canvas{ position:fixed; inset:0; z-index:0; pointer-events:none; }
-
-  /* Hide canvas entirely when mesh is disabled */
   .no-mesh .fx-canvas{ display:none; }
+
+  /* Lock scroll on mobile/tablet (applied via JS) */
+  .lock-scroll{
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100svh;           /* stable viewport height on mobile */
+    overflow: hidden;         /* no vertical/horizontal scroll */
+    -webkit-overflow-scrolling: auto;
+    touch-action: manipulation;
+  }
+  /* Ensure hero fills the viewport on mobile so there’s no extra space */
+  @media (max-width: 899px){
+    .hero{ min-height:100svh; }
+  }
 
   /* Upright thin caret (not italic) */
   .caret::after{
@@ -73,15 +90,6 @@
 
   .word{ display:inline-block; white-space:pre; }
   .fade-out{ opacity:0; transition: opacity 500ms ease; }
-
-  /* Optional: a very light static pattern when mesh is off (can remove if you want pure white) */
-  .no-mesh body{
-    background:
-      radial-gradient(circle at 20% 30%, rgba(0,0,0,0.025) 0, rgba(0,0,0,0) 50%),
-      radial-gradient(circle at 80% 70%, rgba(0,0,0,0.02) 0, rgba(0,0,0,0) 55%),
-      var(--bg);
-    background-attachment: fixed;
-  }
 </style>
 </head>
 <body>
@@ -113,7 +121,7 @@
     </div>
   </footer>
 
-<!-- ================== DEVICE CAPABILITY CHECK (decide mesh/no-mesh) ================== -->
+<!-- ================== DEVICE CAPABILITY CHECK (desktop vs mobile) ================== -->
 <script>
 (function(){
   const isDesktopLike =
@@ -123,13 +131,13 @@
 
   if(!isDesktopLike){
     document.documentElement.classList.add('no-mesh');
-    // prevent mesh init entirely by setting a flag
-    window.__MESH_DISABLED__ = true;
+    document.body.classList.add('lock-scroll');   // lock the page (no tiny scroll)
+    window.__MESH_DISABLED__ = true;              // prevent mesh init
   }
 })();
 </script>
 
-<!-- ================== CHAIN-LINK MESH (desktop only; activates after intro) ================== -->
+<!-- ================== CHAIN-LINK MESH (desktop only; slower fade out) ================== -->
 <script>
 (function(){
   if(window.__MESH_DISABLED__) return; // skip on non-desktop
@@ -139,11 +147,11 @@
   const ctx = canvas.getContext('2d');
   if(!ctx) return;
 
-  // Visibility control: arm only after intro finishes
+  // Only arm mesh after the intro finishes
   let meshArmed = false;
   window.__armMesh = () => { meshArmed = true; };
 
-  // Mesh tuning
+  // Mesh tuning (slower fade-out)
   const DOT_RGB = '120,120,120';
   const GAP = 44;
   const DOT_R = 0.9;
@@ -158,8 +166,11 @@
   let activity = 0;
   const MOVE_BOOST = 0.16;
   const SPEED_GAIN = 0.55;
-  const DECAY_MOVING = 0.005;
-  const DECAY_IDLE   = 0.007;
+
+  /* SLOWER FADE OUT: reduced decay rates */
+  const DECAY_MOVING = 0.0025;
+  const DECAY_IDLE   = 0.0040;
+
   const DEAD_EPS = 0.045;
 
   let isMoving = false;
@@ -317,7 +328,8 @@
   function onMove(e){
     cursor.tx = e.clientX; cursor.ty = e.clientY;
     isMoving = true;
-    if(idleTimer) clearTimeout(idleTimer);
+    // idle timer
+    clearTimeout(idleTimer);
     idleTimer = setTimeout(()=>{ isMoving = false; }, IDLE_AFTER_MS);
     activity = Math.min(1, activity + 0.14);
   }
@@ -331,7 +343,7 @@
 })();
 </script>
 
-<!-- ================== TYPEWRITER (speeds slightly increased; arms mesh at end) ================== -->
+<!-- ================== TYPEWRITER (arms mesh at end) ================== -->
 <script>
 (function(){
   const target = document.getElementById('typeTarget');
@@ -402,7 +414,7 @@
     await fadeOutAll();
     if(FINAL_TYPES) await typeFinalORJM();
 
-    // Arm the mesh after the intro finishes (desktop only; no-op on mobile)
+    // Arm the mesh after the intro (no-op on mobile)
     if (typeof window.__armMesh === 'function') window.__armMesh();
   }
 
