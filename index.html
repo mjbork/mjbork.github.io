@@ -7,19 +7,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg-light: #ffffff;
+      --bg-bone: #f9f6f1;
       --text-dark: #111111;
-      --text-muted: #555555;
+      --text-muted: #666666;
     }
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       height: 100%;
       font-family: 'Inter', sans-serif;
-      background: var(--bg-light);
+      background: var(--bg-bone);
       color: var(--text-dark);
       scroll-behavior: smooth;
       overflow-x: hidden;
@@ -42,13 +38,10 @@
       transition: opacity 0.2s;
       text-transform: lowercase;
     }
-    .nav a:hover {
-      opacity: 0.7;
-    }
+    .nav a:hover { opacity: 0.7; }
+
     /* Hero Section */
     .hero {
-      position: relative;
-      z-index: 1;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -64,22 +57,20 @@
       text-transform: lowercase;
       user-select: none;
       transition: transform 0.15s ease;
-    }
-    .hero h1 .normal {
-      font-family: 'Inter', sans-serif;
-      font-style: normal;
+      will-change: transform;
     }
     .hero h1 .cursive {
-      position: relative;
       font-family: 'Playfair Display', serif;
       font-style: italic;
-      user-select: none;
     }
     .roles {
       margin-top: 0.7rem;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       color: var(--text-muted);
       max-width: 45rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
     }
     .btn {
       margin-top: 1.8rem;
@@ -90,50 +81,50 @@
       border: 1px solid var(--text-dark);
       border-radius: 0.34rem;
       text-decoration: none;
-      transition: background 0.2s, color 0.2s;
       text-transform: lowercase;
+      display: inline-block;
+      transition: transform 0.2s ease, background 0.2s, color 0.2s;
+      position: relative;
     }
     .btn:hover {
       background: var(--text-dark);
-      color: var(--bg-light);
+      color: var(--bg-bone);
+      transform: scale(1.05);
     }
+
     footer {
       position: absolute;
       bottom: 1.2rem;
       width: 100%;
       display: flex;
       justify-content: center;
-      z-index: 1;
     }
     .socials {
       display: flex;
       gap: 1.45rem;
       align-items: center;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
     }
     .socials a {
       color: var(--text-muted);
       display: inline-flex;
-      transition: opacity 0.2s;
+      transition: transform 0.2s ease, opacity 0.2s;
     }
     .socials a:hover {
-      opacity: 0.7;
+      opacity: 0.9;
+      transform: scale(1.2) rotate(6deg);
     }
     .socials svg {
-      width: 20px;
-      height: 20px;
+      width: 22px; height: 22px;
       stroke: currentColor;
       fill: none;
       stroke-width: 1.5;
     }
     @media(max-width: 640px) {
-      .nav {
-        right: 1rem;
-        gap: 1rem;
-        font-size: 0.72rem;
-      }
-      .roles {
-        font-size: 0.74rem;
-      }
+      .nav { right: 1rem; gap: 1rem; font-size: 0.72rem; }
+      .roles { font-size: 0.8rem; }
     }
   </style>
 </head>
@@ -146,30 +137,50 @@
   </nav>
 
   <section class="hero" id="home">
-    <h1 id="heroTitle"><span class="normal"></span> <span class="cursive" data-text="orjm">orjm</span></h1>
-    <p class="roles">strategist · ai-driven video · brand consultant</p>
+    <h1 id="heroTitle"><span class="cursive">orjm</span></h1>
+    <p class="roles" id="roles">strategist · ai-driven video · brand consultant</p>
     <a href="learn-more.html" class="btn">learn more</a>
   </section>
 
   <footer>
-    <div class="socials">
-      <!-- icons kept unchanged -->
+    <div class="socials" id="socials">
+      <a aria-label="YouTube" href="#"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58Z"/><polygon points="10 15 15 12 10 9 10 15"/></svg></a>
+      <a aria-label="Discord" href="#"><svg viewBox="0 0 24 24"><path d="M20.317 4.369A19.791 19.791 0 0 0 15.559 3c-.23.397-.48.92-.658 1.333-1.988-.297-3.962-.297-5.93 0-.18-.426-.437-.936-.666-1.333A19.736 19.736 0 0 0 3.68 4.369 21.639 21.639 0 0 0 1 18.968a19.85 19.85 0 0 0 5.993 2.999c.481-.651.908-1.342 1.291-2.067a13.05 13.05 0 0 1-2.033-.974c.17-.126.334-.258.492-.396a14.75 14.75 0 0 0 12.512 0c.16.146.323.278.492.404-.65.384-1.33.705-2.033.964.383.725.81 1.416 1.29 2.066A19.788 19.788 0 0 0 23 18.969a21.635 21.635 0 0 0-2.683-14.6Z"/></svg></a>
+      <a aria-label="X" href="#"><svg viewBox="0 0 24 24"><path d="M4 4 20 20m0-16L4 20"/></svg></a>
+      <a aria-label="LinkedIn" href="#"><svg viewBox="0 0 24 24"><path d="M3.94 3.5A2.44 2.44 0 0 0 1.5 5.94a2.44 2.44 0 0 0 2.44 2.44 2.44 2.44 0 0 0 2.44-2.44A2.44 2.44 0 0 0 3.94 3.5Zm.06 3.74H1.48v13.7h2.52v-13.7Zm6.85-4.94c-1.57 0-2.53.86-2.96 1.55v-1.34H5v13.7h2.41v-7.83c0-.41.03-.83.15-1.12.38-.92 1.25-1.88 2.71-1.88 1.91 0 2.67 1.41 2.67 3.48v7.35h2.42v-7.91c0-4.11-2.18-6.04-5.09-6.04z"/></svg></a>
     </div>
   </footer>
 
   <script>
-    // simple interactive tilt effect on hero title
+    // Hero title tilt
     const title = document.getElementById('heroTitle');
     document.addEventListener('mousemove', (e) => {
       const { innerWidth:w, innerHeight:h } = window;
-      const x = (e.clientX / w - 0.5) * 10; // -5..5 deg
-      const y = (e.clientY / h - 0.5) * -10;
+      const x = (e.clientX / w - 0.5) * 12;
+      const y = (e.clientY / h - 0.5) * -12;
       title.style.transform = `rotateX(${y}deg) rotateY(${x}deg)`;
     });
     document.addEventListener('mouseleave', () => {
-      title.style.transform = `rotateX(0deg) rotateY(0deg)`;
+      title.style.transform = 'rotateX(0deg) rotateY(0deg)';
     });
+
+    // Scroll reveal
+    const reveal = (el) => {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = 1;
+            entry.target.style.transform = 'translateY(0)';
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.2 });
+      obs.observe(el);
+    };
+    reveal(document.getElementById('roles'));
+    reveal(document.getElementById('socials'));
   </script>
 </body>
 </html>
+
 
