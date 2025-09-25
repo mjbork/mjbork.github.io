@@ -109,7 +109,7 @@
   if(!ctx) return;
 
   /* ---------- Visual (gray mesh) ---------- */
-  const DOT_RGB   = '150,150,150';   // subtle gray
+  const DOT_RGB   = '170,170,170';   // subtle gray
   const GAP       = 46;              // grid spacing
   const CLUSTER_N = 8;               // micro-dots per node
   const CLUSTER_R = 5;               // cluster radius (CSS px)
@@ -219,7 +219,7 @@
       }
 
       // smooth easing toward target (very soft)
-      const ease = 0.14;
+      const ease = 0.10;
       st.x += (st.bx - st.x) * ease;
       st.y += (st.by - st.y) * ease;
 
