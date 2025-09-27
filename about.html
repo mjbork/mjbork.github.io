@@ -27,7 +27,7 @@ html,body{
 .nav{
   position:fixed;
   top:1.2rem;
-  right:2.4rem;
+  left:2.4rem; /* Align to the left */
   z-index:10;
   display:flex;
   gap:1.4rem;
@@ -95,22 +95,25 @@ p{
 
 /* Small screens: ensure nice spacing under fixed nav */
 @media (max-width: 640px){
-  .nav{ right:1rem; gap:1rem; font-size:.74rem; }
+  .nav{ left:1rem; gap:1rem; font-size:.74rem; }
   main{ margin:14vh auto; }
 }
 
-/* Home button styles within the nav */
-.home-icon {
-  position: absolute;
-  left: 0;
-  top: 1.2rem;
-  z-index: 10;
-  display: inline-flex;
+/* Home button */
+.home-icon{
+  display:inline-flex;
   width: 22px;
   height: 22px;
   stroke: var(--text);
   fill: none;
   stroke-width: 1.5;
+}
+
+/* Small screens: Home button moves to top-left */
+@media (max-width: 640px){
+  .home-icon{
+    left:1rem; /* Move to the left */
+  }
 }
 </style>
 </head>
@@ -118,12 +121,12 @@ p{
 
 <!-- Global Navigation -->
 <nav class="nav" aria-label="Primary">
-  <!-- Home button inside the navigation bar -->
+  <!-- Home button inside the navigation bar, placed to the left of the menu -->
   <a href="index.html" class="home-icon">
     <svg viewBox="0 0 24 24"><path d="M12 3l9 9-1.5 1.5-7.5-7.5v12h-3v-12l-7.5 7.5-1.5-1.5z"/></svg>
   </a>
-  <a href="about.html" aria-current="page">about</a>
-  <a href="campaigns.html">campaigns</a>
+  <a href="about.html">about</a>
+  <a href="campaigns.html" aria-current="page">campaigns</a>
   <a href="reel.html">reel</a>
   <a href="contact.html">contact</a>
 </nav>
