@@ -3,31 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>About Me — Your Name</title>
+<title>About Me — ORJM</title>
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courgette&display=swap" rel="stylesheet">
 
 <style>
-:root{--bg:#0f0f0f;--text:#e6e6e6;--muted:#9ca3af}
+:root{
+  --bg:#ffffff;       /* white background */
+  --text:#111111;     /* black text */
+  --muted:#555555;    /* softer gray for body text */
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,sans-serif;
+}
 
-/* subtle glow */
+/* Subtle gradient glow (very faint) */
 body::before{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(120% 80% at -15% -15%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 60%);
+  background:radial-gradient(120% 80% at -15% -15%,rgba(0,0,0,.05) 0%,rgba(0,0,0,0) 60%);
   filter:blur(80px);mix-blend-mode:overlay;
 }
 
 .cursive{font-family:'Courgette',cursive;font-style:normal}
 
-main{max-width:800px;margin:16vh auto;padding:0 1.6rem;position:relative;z-index:1}
-h1{font-size:2rem;font-weight:500;margin-bottom:1.5rem;text-transform:lowercase}
-.cursive{font-family:'Courgette',cursive;font-style:normal}
-p{font-size:.94rem;line-height:1.7;color:var(--muted);margin-bottom:1.2rem}
+main{
+  max-width:800px;
+  margin:16vh auto;
+  padding:0 1.6rem;
+  position:relative;
+  z-index:1;
+}
+h1{
+  font-size:2rem;
+  font-weight:500;
+  margin-bottom:1.5rem;
+  text-transform:lowercase;
+}
+p{
+  font-size:.94rem;
+  line-height:1.7;
+  color:var(--muted);
+  margin-bottom:1.2rem;
+}
 .back{margin-top:3rem}
-.back a{color:var(--text);text-decoration:none;border-bottom:1px solid #444}
+.back a{
+  color:var(--text);
+  text-decoration:none;
+  border-bottom:1px solid #999;
+}
 .back a:hover{opacity:.75}
 </style>
 </head>
