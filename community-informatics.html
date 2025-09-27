@@ -36,13 +36,20 @@ html,body{
   letter-spacing:.02em;
   text-transform:lowercase;
 }
+
 .nav a{
   color:var(--text);
-  text-decoration:none; /* Remove underline */
+  text-decoration:none; /* Removed underline */
   transition:opacity .2s;
 }
+
 .nav a:hover{ opacity:.7; }
-.nav a[aria-current="page"]{ opacity:.6; pointer-events:none; }
+
+/* Keep campaigns link clickable, even when selected */
+.nav a[aria-current="page"]{
+  opacity:.6;
+  pointer-events:auto; /* Allow clicking even when it's active */
+}
 
 /* Subtle light-theme glow */
 body::before{
@@ -58,6 +65,7 @@ main{
   padding:0 1.6rem;
   position:relative; z-index:1;
 }
+
 h1{
   font-size: clamp(1.8rem, 4.5vw, 2.4rem);
   font-weight:500;
@@ -83,8 +91,8 @@ ul{
 
 a{
   color:var(--text);
-  text-decoration:none;
-  border-bottom:1px solid #444;
+  text-decoration:none; /* Removed underline */
+  border-bottom:0; /* Ensure no underline */
 }
 
 a:hover{
@@ -92,11 +100,13 @@ a:hover{
 }
 
 /* Back link */
-.back{margin-top:3rem}
+.back{
+  margin-top:2rem; /* Adjusted to bring it higher */
+}
 .back a{
   color:var(--text);
   text-decoration:none;
-  border-bottom:1px solid #999;
+  border-bottom:0; /* Removed underline */
 }
 .back a:hover{ opacity:.75; }
 
