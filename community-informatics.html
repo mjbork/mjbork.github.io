@@ -38,7 +38,7 @@ html,body{
 }
 .nav a{
   color:var(--text);
-  text-decoration:none;
+  text-decoration:none; /* Remove underline */
   transition:opacity .2s;
 }
 .nav a:hover{ opacity:.7; }
@@ -78,7 +78,7 @@ p,li{
 
 ul{
   list-style:disc;
-  margin-left:1.2rem;
+  margin:0 0 1.8rem 1.2rem;
 }
 
 a{
@@ -111,6 +111,9 @@ a:hover{
 
 <!-- Global Navigation -->
 <nav class="nav" aria-label="Primary">
+  <a href="index.html" class="home-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 3l9 9-1.5 1.5-7.5-7.5v12h-3v-12l-7.5 7.5-1.5-1.5z"/></svg>
+  </a>
   <a href="about.html">about</a>
   <a href="campaigns.html" aria-current="page">campaigns</a>
   <a href="reel.html">reel</a>
