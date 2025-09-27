@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>About Me — ORJM</title>
+<title>About — ORJM</title>
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courgette&display=swap" rel="stylesheet">
@@ -14,21 +14,48 @@
   --text:#111111;     /* black text */
   --muted:#555555;    /* softer gray for body text */
 }
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{
   height:100%;
   background:var(--bg);
   color:var(--text);
-  font-family:Inter,sans-serif;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
 }
 
-/* Subtle gradient glow (very faint) */
+/* Global top-right nav (same as main page) */
+.nav{
+  position:fixed;
+  top:1.2rem;
+  right:2.4rem;
+  z-index:10;
+  display:flex;
+  gap:1.4rem;
+  font-size:.78rem;
+  font-weight:500;
+  letter-spacing:.02em;
+  text-transform:lowercase;
+}
+.nav a{
+  color:var(--text);
+  text-decoration:none;
+  transition:opacity .2s;
+}
+.nav a:hover{ opacity:.7; }
+/* Optional: highlight current page */
+.nav a[aria-current="page"]{
+  opacity:.6;
+  pointer-events:none;
+}
+
+/* Subtle background glow (very faint), consistent with light theme */
 body::before{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   background:radial-gradient(120% 80% at -15% -15%,rgba(0,0,0,.05) 0%,rgba(0,0,0,0) 60%);
   filter:blur(80px);mix-blend-mode:overlay;
 }
 
+/* Content */
 .cursive{font-family:'Courgette',cursive;font-style:normal}
 
 main{
@@ -50,6 +77,8 @@ p{
   color:var(--muted);
   margin-bottom:1.2rem;
 }
+
+/* Back link (you can keep or remove since we now have the global nav) */
 .back{margin-top:3rem}
 .back a{
   color:var(--text);
@@ -57,9 +86,24 @@ p{
   border-bottom:1px solid #999;
 }
 .back a:hover{opacity:.75}
+
+/* Small screens: ensure nice spacing under fixed nav */
+@media (max-width: 640px){
+  .nav{ right:1rem; gap:1rem; font-size:.74rem; }
+  main{ margin:14vh auto; }
+}
 </style>
 </head>
 <body>
+
+<!-- Global Navigation -->
+<nav class="nav" aria-label="Primary">
+  <a href="about.html" aria-current="page">about</a>
+  <a href="campaigns.html">campaigns</a>
+  <a href="reel.html">reel</a>
+  <a href="contact.html">contact</a>
+</nav>
+
 <main>
   <h1>about <span class="cursive">me</span></h1>
 
@@ -79,7 +123,9 @@ p{
     Currently dividing my time between Argentina and the U.S., I seek professional collaborations that value strategic creativity, cultural sensitivity, and innovation.
   </p>
 
-  <div class="back"><a href="index.html">← back to home</a></div>
+  <!-- Optional back link (the global nav already provides navigation) -->
+  <!-- <div class="back"><a href="index.html">← back to home</a></div> -->
 </main>
+
 </body>
 </html>
