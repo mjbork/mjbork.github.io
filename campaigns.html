@@ -3,35 +3,96 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>campaigns — your name</title>
+<title>campaigns — ORJM</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
 
 <style>
-:root{--bg:#0f0f0f;--text:#e6e6e6;--muted:#9ca3af}
+:root{
+  --bg:#ffffff;     /* white background */
+  --text:#111111;   /* black text */
+  --muted:#555555;  /* softer gray for body text */
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
-body::before{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(120% 80% at -15% -15%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 60%);
-  filter:blur(80px);mix-blend-mode:overlay;
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
 }
 
-main{max-width:680px;margin:18vh auto 0;padding:0 1.5rem;position:relative;z-index:1;text-align:left}
-h1{font-size:1.9rem;font-weight:500;margin-bottom:2rem}
-ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1rem}
-li a{color:var(--text);text-decoration:none;font-size:.92rem;line-height:1.4;transition:color .15s ease}
-li a::before{content:"– ";color:var(--muted)}
-li a:hover{color:#c6c6c6}
+/* Global top-right nav (shared across pages) */
+.nav{
+  position:fixed; top:1.2rem; right:2.4rem; z-index:10;
+  display:flex; gap:1.4rem;
+  font-size:.78rem; font-weight:500; letter-spacing:.02em; text-transform:lowercase;
+}
+.nav a{ color:var(--text); text-decoration:none; transition:opacity .2s; }
+.nav a:hover{ opacity:.7; }
+.nav a[aria-current="page"]{ opacity:.6; pointer-events:none; }
 
-.back{margin-top:3rem}
-.back a{color:var(--text);text-decoration:none;border-bottom:1px solid #444}
-.back a:hover{opacity:.75}
+/* Subtle light-theme glow */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:radial-gradient(120% 80% at -15% -15%, rgba(0,0,0,.05) 0%, rgba(0,0,0,0) 60%);
+  filter:blur(80px); mix-blend-mode:overlay;
+}
+
+/* Content */
+main{
+  max-width:680px;
+  margin:18vh auto 0;
+  padding:0 1.5rem;
+  position:relative; z-index:1; text-align:left;
+}
+
+/* Cursive title like main page */
+.cursive{ font-family:'Playfair Display', serif; font-style:italic; }
+
+h1{
+  font-size: clamp(1.8rem, 4.5vw, 2.4rem);
+  font-weight:500;
+  margin-bottom:2rem;
+  text-transform:lowercase;
+}
+
+/* List */
+ul{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:1rem; }
+li a{
+  color:var(--text);
+  text-decoration:none;
+  font-size:.98rem;
+  line-height:1.5;
+  transition:color .15s ease, transform .15s ease;
+}
+li a::before{ content:"– "; color:var(--muted); }
+li a:hover{ color:#000; transform:translateX(2px); }
+
+/* Back link (optional since global nav exists) */
+.back{ margin-top:3rem; }
+.back a{ color:var(--text); text-decoration:none; border-bottom:1px solid #999; }
+.back a:hover{ opacity:.75; }
+
+/* Small screens: spacing under fixed nav */
+@media (max-width: 640px){
+  .nav{ right:1rem; gap:1rem; font-size:.74rem; }
+  main{ margin:16vh auto 0; }
+}
 </style>
 </head>
 <body>
+
+<!-- Global Navigation -->
+<nav class="nav" aria-label="Primary">
+  <a href="about.html">about</a>
+  <a href="campaigns.html" aria-current="page">campaigns</a>
+  <a href="reel.html">reel</a>
+  <a href="contact.html">contact</a>
+</nav>
+
 <main>
-  <h1>campaigns…</h1>
+  <h1 class="cursive">campaigns…</h1>
 
   <ul>
     <li><a href="community-informatics.html">Community Informatics Corps, UIUC</a></li>
@@ -40,7 +101,10 @@ li a:hover{color:#c6c6c6}
     <li><a href="#">ORJM Consulting</a></li>
   </ul>
 
+  <!-- Optional back link (global nav already provides navigation)
   <div class="back"><a href="index.html">← back to home</a></div>
+  -->
 </main>
+
 </body>
 </html>
