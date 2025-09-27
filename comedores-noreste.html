@@ -39,7 +39,7 @@ html,body{
 
 .nav a{
   color:var(--text);
-  text-decoration:none;
+  text-decoration:none; /* Removed underline */
   transition:opacity .2s;
 }
 
@@ -95,8 +95,8 @@ ul{
 
 a{
   color:var(--text);
-  text-decoration:none;
-  border-bottom:1px solid #444;
+  text-decoration:none; /* Removed underline */
+  border-bottom:0; /* Ensure no underline */
 }
 
 a:hover{
@@ -108,7 +108,7 @@ a:hover{
 .back a{
   color:var(--text);
   text-decoration:none;
-  border-bottom:1px solid #999;
+  border-bottom:0; /* Removed underline */
 }
 .back a:hover{ opacity:.75; }
 
