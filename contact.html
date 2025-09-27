@@ -73,6 +73,7 @@ h1 {
   gap: 0.7rem;
   margin-bottom: 2.8rem;
   width: 100%;
+  justify-content: center;
 }
 
 .info span {
@@ -80,7 +81,7 @@ h1 {
   color: var(--muted);
   width: 100%;
   max-width: 400px;
-  text-align: left;
+  text-align: center;  /* Centering the email */
 }
 
 strong {
@@ -92,17 +93,23 @@ strong {
   display: flex;
   justify-content: center;
   gap: 1.45rem;
-  margin-bottom: 2.8rem;
+  position: absolute;
+  bottom: 1.2rem; /* Position the socials at the bottom */
+  left: 50%;
+  transform: translateX(-50%); /* Center the social icons */
 }
+
 .socials a {
   color: var(--muted);
   display: inline-flex;
   transition: opacity 0.2s;
   text-decoration: none;
 }
+
 .socials a:hover {
   opacity: 0.75;
 }
+
 .socials svg {
   width: 20px;
   height: 20px;
