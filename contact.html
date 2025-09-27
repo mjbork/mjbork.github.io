@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>contact — your name</title>
+<title>contact — ORJM</title>
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Courgette&display=swap" rel="stylesheet" />
 
 <style>
 :root {
-  --bg: #0f0f0f;
-  --text: #e6e6e6;
-  --muted: #9ca3af;
+  --bg: #ffffff;       /* white background */
+  --text: #111111;      /* black text */
+  --muted: #555555;     /* softer gray for body text */
 }
 *,
 *::before,
@@ -29,7 +29,7 @@ body {
   font-family: Inter, sans-serif;
 }
 
-/* subtle glow */
+/* Subtle glow effect */
 body::before {
   content: "";
   position: fixed;
@@ -87,7 +87,7 @@ strong {
   color: var(--text);
 }
 
-/* socials */
+/* Social media links */
 .socials {
   display: flex;
   justify-content: center;
@@ -119,14 +119,34 @@ strong {
 .back a:hover {
   opacity: 0.75;
 }
+
+/* Home Button in the top-right corner */
+.home-icon {
+  position: fixed;
+  top: 1.2rem;
+  right: 2.4rem;
+  z-index: 10;
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  stroke: var(--text);
+  fill: none;
+  stroke-width: 1.5;
+}
 </style>
 </head>
 <body>
+
+<!-- Home Button -->
+<a href="index.html" class="home-icon">
+  <svg viewBox="0 0 24 24"><path d="M12 3l9 9-1.5 1.5-7.5-7.5v12h-3v-12l-7.5 7.5-1.5-1.5z"/></svg>
+</a>
+
 <main>
   <h1>get in <span class="cursive">touch</span></h1>
 
   <div class="info">
-    <span>email — <strong>orjmcnsltng814@protonmail.com</strong></span>
+    <span><strong>contact@orjm.work</strong></span> <!-- Updated email without "email -" -->
   </div>
 
   <div class="socials">
@@ -170,5 +190,6 @@ strong {
     <a href="index.html">← back to home</a>
   </div>
 </main>
+
 </body>
 </html>
