@@ -27,7 +27,7 @@ html,body{
 .nav{
   position:fixed;
   top:1.2rem;
-  left:2.4rem; /* Align to the left */
+  right:2.4rem; /* Move the navigation to the right */
   z-index:10;
   display:flex;
   gap:1.4rem;
@@ -95,7 +95,7 @@ p{
 
 /* Small screens: ensure nice spacing under fixed nav */
 @media (max-width: 640px){
-  .nav{ left:1rem; gap:1rem; font-size:.74rem; }
+  .nav{ right:1rem; gap:1rem; font-size:.74rem; }
   main{ margin:14vh auto; }
 }
 
