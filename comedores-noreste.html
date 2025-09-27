@@ -44,7 +44,12 @@ html,body{
 }
 
 .nav a:hover{ opacity:.7; }
-.nav a[aria-current="page"]{ opacity:.6; pointer-events:none; }
+
+/* Keep campaigns link clickable, even when selected */
+.nav a[aria-current="page"]{
+  opacity:.6;
+  pointer-events:auto; /* Allow clicking even when it's active */
+}
 
 .nav .home-icon{
   display: inline-flex;
@@ -104,7 +109,9 @@ a:hover{
 }
 
 /* Back link */
-.back{margin-top:3rem}
+.back{
+  margin-top:2rem; /* Adjusted to bring it higher */
+}
 .back a{
   color:var(--text);
   text-decoration:none;
