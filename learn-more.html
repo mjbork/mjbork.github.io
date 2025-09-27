@@ -83,8 +83,13 @@
   .back a:hover {
     opacity: 0.75;
   }
-  /* Home button */
+
+  /* Home button in the right corner */
   .home-icon {
+    position: fixed;
+    top: 1.2rem;
+    right: 2.4rem;
+    z-index: 10;
     display: inline-flex;
     width: 22px;
     height: 22px;
@@ -95,12 +100,11 @@
 </style>
 </head>
 <body>
-<!-- Global Navigation -->
-<nav class="nav" aria-label="Primary">
-  <a href="index.html" class="home-icon">
-    <svg viewBox="0 0 24 24"><path d="M12 3l9 9-1.5 1.5-7.5-7.5v12h-3v-12l-7.5 7.5-1.5-1.5z"/></svg>
-  </a>
-</nav>
+
+<!-- Home Button in the right corner -->
+<a href="index.html" class="home-icon">
+  <svg viewBox="0 0 24 24"><path d="M12 3l9 9-1.5 1.5-7.5-7.5v12h-3v-12l-7.5 7.5-1.5-1.5z"/></svg>
+</a>
 
 <main>
   <h1>creative strategy + <span class="cursive">AI-powered storytelling</span></h1>
@@ -131,5 +135,6 @@
 
   <div class="back"><a href="index.html">← back to home</a></div>
 </main>
+
 </body>
 </html>
