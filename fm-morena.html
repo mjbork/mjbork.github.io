@@ -65,7 +65,7 @@ a:hover{
 .nav{
   position:fixed;
   top:1.2rem;
-  left:2.4rem;
+  right:2.4rem; /* Correctly aligned to the top-right */
   z-index:10;
   display:flex;
   gap:1.4rem;
@@ -112,7 +112,7 @@ a:hover{
 
 /* Small screens: spacing under fixed nav */
 @media (max-width: 640px){
-  .nav{ left:1rem; gap:1rem; font-size:.74rem; }
+  .nav{ right:1rem; gap:1rem; font-size:.74rem; }
   main{ margin:16vh auto 0; }
 }
 </style>
