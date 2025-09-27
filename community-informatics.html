@@ -3,31 +3,120 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Community Informatics Corps — campaign</title>
+<title>Community Informatics Corps — ORJM Campaign</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
 
 <style>
-:root{--bg:#0f0f0f;--text:#e6e6e6;--muted:#9ca3af}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
-body::before{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(120% 80% at -15% -15%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 60%);
-  filter:blur(80px);mix-blend-mode:overlay;
+:root{
+  --bg:#ffffff;     /* white background */
+  --text:#111111;    /* black text */
+  --muted:#555555;   /* softer gray for body text */
 }
 
-main{max-width:720px;margin:18vh auto 0;padding:0 1.6rem;position:relative;z-index:1}
-h1{font-size:1.9rem;font-weight:500;margin-bottom:1.2rem;text-transform:lowercase}
-h2{font-size:1.05rem;margin:2.2rem 0 .8rem}
-p,li{font-size:.9rem;line-height:1.55;color:var(--muted)}
-ul{list-style:disc;margin-left:1.2rem}
-a{color:var(--text);text-decoration:none;border-bottom:1px solid #444}
-a:hover{opacity:.75}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+}
+
+/* Global top-right nav (shared across pages) */
+.nav{
+  position:fixed;
+  top:1.2rem;
+  right:2.4rem;
+  z-index:10;
+  display:flex;
+  gap:1.4rem;
+  font-size:.78rem;
+  font-weight:500;
+  letter-spacing:.02em;
+  text-transform:lowercase;
+}
+.nav a{
+  color:var(--text);
+  text-decoration:none;
+  transition:opacity .2s;
+}
+.nav a:hover{ opacity:.7; }
+.nav a[aria-current="page"]{ opacity:.6; pointer-events:none; }
+
+/* Subtle light-theme glow */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:radial-gradient(120% 80% at -15% -15%, rgba(0,0,0,.05) 0%, rgba(0,0,0,0) 60%);
+  filter:blur(80px); mix-blend-mode:overlay;
+}
+
+/* Content */
+main{
+  max-width:720px;
+  margin:18vh auto 0;
+  padding:0 1.6rem;
+  position:relative; z-index:1;
+}
+h1{
+  font-size: clamp(1.8rem, 4.5vw, 2.4rem);
+  font-weight:500;
+  margin-bottom:2rem;
+  text-transform:lowercase;
+}
+
+h2{
+  font-size:1.05rem;
+  margin:2.2rem 0 .8rem;
+}
+
+p,li{
+  font-size:.9rem;
+  line-height:1.55;
+  color:var(--muted);
+}
+
+ul{
+  list-style:disc;
+  margin-left:1.2rem;
+}
+
+a{
+  color:var(--text);
+  text-decoration:none;
+  border-bottom:1px solid #444;
+}
+
+a:hover{
+  opacity:.75;
+}
+
+/* Back link */
 .back{margin-top:3rem}
+.back a{
+  color:var(--text);
+  text-decoration:none;
+  border-bottom:1px solid #999;
+}
+.back a:hover{ opacity:.75; }
+
+/* Small screens: spacing under fixed nav */
+@media (max-width: 640px){
+  .nav{ right:1rem; gap:1rem; font-size:.74rem; }
+  main{ margin:16vh auto 0; }
+}
 </style>
 </head>
 <body>
+
+<!-- Global Navigation -->
+<nav class="nav" aria-label="Primary">
+  <a href="about.html">about</a>
+  <a href="campaigns.html" aria-current="page">campaigns</a>
+  <a href="reel.html">reel</a>
+  <a href="contact.html">contact</a>
+</nav>
+
 <main>
   <h1>community informatics corps (CIC)</h1>
 
@@ -61,5 +150,6 @@ a:hover{opacity:.75}
 
   <div class="back"><a href="campaigns.html">← back to campaigns</a></div>
 </main>
+
 </body>
 </html>
